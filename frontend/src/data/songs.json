@@ -1,0 +1,59 @@
+[
+    {
+      "title": "Electric Dreams",
+      "artist": "Neon Vibes",
+      "length": "3:45",
+      "tags": ["synthwave", "chill"],
+      "bpm": 90,
+      "dateAdded": "2025-03-10"
+    },
+    {
+      "title": "Midnight Runner",
+      "artist": "Driveway Lights",
+      "length": "4:20",
+      "tags": ["retro", "instrumental"],
+      "bpm": 105,
+      "dateAdded": "2025-03-12"
+    },
+    {
+      "title": "Sunset Mirage",
+      "artist": "Echo City",
+      "length": "5:05",
+      "tags": ["ambient", "lofi"],
+      "bpm": 70,
+      "dateAdded": "2025-03-14"
+    },
+    {
+      "title": "Pulse Theory",
+      "artist": "Bass Haven",
+      "length": "3:33",
+      "tags": ["edm", "high energy"],
+      "bpm": 128,
+      "dateAdded": "2025-03-15"
+    },
+    {
+      "title": "Velvet Skies",
+      "artist": "Dream Architect",
+      "length": "4:50",
+      "tags": ["downtempo", "dream pop"],
+      "bpm": 85,
+      "dateAdded": "2025-03-17"
+    },
+    {
+      "title": "Nightfall",
+      "artist": "Luna Fade",
+      "length": "4:00",
+      "tags": ["darkwave", "synth"],
+      "bpm": 100,
+      "dateAdded": "2025-03-20"
+    },
+    {
+      "title": "Digital Rain",
+      "artist": "Pixel Aurora",
+      "length": "3:58",
+      "tags": ["chillstep", "futuristic"],
+      "bpm": 110,
+      "dateAdded": "2025-03-22"
+    }
+  ]
+  
