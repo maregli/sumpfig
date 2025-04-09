@@ -1,13 +1,5 @@
 import React from "react";
-
-type Song = {
-  title: string;
-  artist: string;
-  length: string;
-  tags: string[];
-  bpm: number;
-  dateAdded: string;
-};
+import { Song } from "types/song"; 
 
 type Props = {
   song: Song;
