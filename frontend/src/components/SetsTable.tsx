@@ -1,6 +1,8 @@
 import * as React from 'react';
+import ReactPlayer from 'react-player';
 import { Song } from 'types/song';
 import songs from 'data/songs.json';
+// import SoundCloudPlayer from 'components/SoundCloudPlayer';
 import { alpha } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
@@ -254,7 +256,12 @@ export default function SongsTable() {
   );
 
   return (
+    
     <Box sx={{ width: '100%' }}>
+      {/* <SoundCloudPlayer
+        src="https://soundcloud.com/billieeilish/birds-of-a-feather?utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing"
+        /> */}
+      <ReactPlayer url='https://soundcloud.com/glennmorrison/beethoven-moonlight-sonata' />
       <Paper sx={{ width: '100%', mb: 2 }}>
         <EnhancedTableToolbar numSelected={selected.length} />
         <TableContainer>
