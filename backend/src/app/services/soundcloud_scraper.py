@@ -45,6 +45,7 @@ def extract_track_data(url):
     try:
         # Step 1: Fetch the page
         response = requests.get(url, timeout=10)
+        response.encoding = "utf-8"
         response.raise_for_status()
     except requests.Timeout:
         logging.error("Request timed out.")
@@ -76,11 +77,7 @@ def extract_track_data(url):
 
         # Step 4: Extract track & user info
         track_data = next(
-            (
-                item["data"]
-                for item in hydration_data
-                if item.get("hydratable") == "sound"
-            ),
+            (item["data"] for item in hydration_data if item.get("hydratable") == "sound"),
             None,
         )
         if not track_data:
