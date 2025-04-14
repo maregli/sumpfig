@@ -1,21 +1,17 @@
 import React from 'react';
-import SetsTable from 'components/SetsTable';
-import AddSongComponent from 'components/AddSet'; // Assuming you have an AddSong component
+import SetManager from 'components/SetManager';
+import AddSetDrawer from 'components/AddSetBar';
 // import logo from './logo.svg';
 import './App.css';
 
 function App() {
+  const [open, setOpen] = React.useState(false);
   return (
-    <div className="App" style={{ backgroundColor: 'red' }}>
-      <header className="App-header">
-        {/* <img src={logo} className="App-logo" alt="logo" /> */}
-        <p>
-          <SetsTable />
-        </p>
-        <p>
-          <AddSongComponent />
-        </p>
-      </header>
+    <div className="App" style={{ backgroundColor: 'white' }}>
+      <main>
+        <SetManager />
+        <AddSetDrawer open={open} setOpen={setOpen} />
+      </main>
     </div>
   );
 }

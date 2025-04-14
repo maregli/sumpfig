@@ -1,5 +1,5 @@
 import * as React from 'react';
-import ReactPlayer from 'react-player';
+// import ReactPlayer from 'react-player';
 import { Song } from 'types/song';
 import songs from 'data/songs.json';
 // import SoundCloudPlayer from 'components/SoundCloudPlayer';
@@ -195,12 +195,17 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
   );
 }
 
-export default function SongsTable() {
+export default function SongsTable(props: { addSetOpen: boolean; setAddSetOpen: (open: boolean) => void }) {
+  const { addSetOpen, setAddSetOpen } = props;
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<keyof Song>('bpm');
   const [selected, setSelected] = React.useState<readonly number[]>([]);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
+
+  const handleAddSetOpen = () => {
+    setAddSetOpen(true);
+  };
 
   const handleRequestSort = (_event: React.MouseEvent<unknown>, property: keyof Song) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -261,7 +266,7 @@ export default function SongsTable() {
       {/* <SoundCloudPlayer
         src="https://soundcloud.com/billieeilish/birds-of-a-feather?utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing"
         /> */}
-      <ReactPlayer url='https://soundcloud.com/glennmorrison/beethoven-moonlight-sonata' />
+      {/* <ReactPlayer url='https://soundcloud.com/glennmorrison/beethoven-moonlight-sonata' /> */}
       <Paper sx={{ width: '100%', mb: 2 }}>
         <EnhancedTableToolbar numSelected={selected.length} />
         <TableContainer>
@@ -327,7 +332,7 @@ export default function SongsTable() {
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={() => alert('Add new song')}
+                  onClick={handleAddSetOpen}
                   sx={{ ml: 2 }}
                 >
                   Add New Song
