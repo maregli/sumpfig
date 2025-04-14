@@ -1,6 +1,6 @@
 # From https://www.docker.com/blog/how-to-dockerize-react-app/
 # Use the latest LTS version of Node.js
-FROM node:18-alpine
+FROM node:22-alpine
  
 # Set the working directory inside the container
 WORKDIR /app

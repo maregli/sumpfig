@@ -20,5 +20,5 @@ RUN poetry install --without dev
 
 EXPOSE 5000
 
-CMD ["--host", "127.0.0.1", "--port", "5000"]
+CMD ["--host", "0.0.0.0", "--port", "5000", "--debug"]
 ENTRYPOINT ["poetry", "run", "python", "-m", "src.app.server"]
