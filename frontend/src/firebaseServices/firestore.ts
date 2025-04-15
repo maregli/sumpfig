@@ -1,6 +1,6 @@
 // src/firebase/firestore.ts
 
-import { collection, addDoc, getDocs, QuerySnapshot, DocumentData , onSnapshot} from 'firebase/firestore';
+import { collection, addDoc, getDocs, QuerySnapshot, DocumentData , onSnapshot, doc, deleteDoc} from 'firebase/firestore';
 import { db } from 'firebaseServices/firebaseConfig';
 
 import { Track } from 'types/track';
@@ -60,4 +60,21 @@ export const subscribeToTracks = (
   );
 
   return () => unsubscribe();
+};
+
+export const deleteTracks = async (trackIds: readonly string[]): Promise<void> => {
+  try {
+    // Use Promise.all to perform the deletions in parallel
+    await Promise.all(
+      trackIds.map(async (trackId) => {
+        const trackDocRef = doc(db, 'tracks', trackId); // Reference to the specific document
+        await deleteDoc(trackDocRef);
+        console.log(`Track with ID ${trackId} deleted successfully.`);
+      })
+    );
+    console.log('All selected tracks deleted successfully.');
+  } catch (error) {
+    console.error('Error deleting tracks:', error);
+    throw error; // Re-throw the error to be handled by the component
+  }
 };

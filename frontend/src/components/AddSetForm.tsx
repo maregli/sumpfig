@@ -144,27 +144,6 @@ const AddTrackForm = (props: {handleClickClose: () => void}) => {
         required
       />
 
-      {/* <TextField
-        label="Album"
-        variant="outlined"
-        name="album"
-        value={track.album || ''}
-        onChange={handleChange}
-        helperText="Optional"
-      /> */}
-
-      {/* <TextField
-        label="Release Date"
-        variant="outlined"
-        name="release_date"
-        type="date"
-        value={track.release_date || ''}
-        onChange={handleChange}
-        InputLabelProps={{
-          shrink: true,
-        }}
-      /> */}
-
       <TextField
         label="Publish Date"
         variant="outlined"
@@ -226,16 +205,21 @@ const AddTrackForm = (props: {handleClickClose: () => void}) => {
           ),
         }}
       />
-{/* 
-      <TextField
-        label="Artwork URL"
-        variant="outlined"
-        name="artwork_url"
-        value={track.artwork_url}
-        onChange={handleChange}
-        helperText="URL of the track's artwork image"
-        required
-      /> */}
+        <TextField
+          label="Tags"
+          variant="outlined"
+          name="tags"
+          value={track.tags ? track.tags.join(', ') : ''}
+          onChange={(e) => {
+            const tags = e.target.value.split(',').map((tag) => tag.trim());
+            setTrack((prevTrack:TrackNoId) => ({
+              ...prevTrack,
+              tags: tags,
+            }));
+          }
+          }
+          required
+        />
     </Box>
     <Box>
         <DialogActions>

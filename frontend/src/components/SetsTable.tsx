@@ -26,7 +26,7 @@ import { visuallyHidden } from '@mui/utils';
 import { Button, TableFooter } from '@mui/material';
 
 import AddSet from './AddSet';
-import { subscribeToTracks} from 'firebaseServices/firestore';
+import { subscribeToTracks, deleteTracks} from 'firebaseServices/firestore';
 
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) : (0 | 1 | -1) {
@@ -186,11 +186,30 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 
 interface EnhancedTableToolbarProps {
   numSelected: number;
+  selectedIds: readonly string[];
+  setSelected: (selected: readonly string[]) => void;
+  setIsLoading: (loading: boolean) => void;
+  setError: (error: Error | null) => void; // Added error state
 }
 
 function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
   // This is for the selecting of tracks, deleting and filtering button
-  const { numSelected } = props;
+  const { numSelected, selectedIds, setSelected, setIsLoading, setError} = props;
+
+  const handleDeleteSelected = async () => {
+    setIsLoading(true); // Show loading indicator
+
+    try {
+      await deleteTracks(selectedIds); 
+      setSelected([]); // Clear selected track IDs after deletion
+    } catch (error: any) {
+      console.error('Error deleting tracks:', error);
+      setError(error); // Set error state to display error message
+    } finally {
+      setIsLoading(false); // Hide loading indicator
+    }
+  };
+
   return (
     <Toolbar
       sx={[
@@ -216,7 +235,7 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
       {numSelected > 0 ? (
         <Tooltip title="Delete">
           <IconButton>
-            <DeleteIcon />
+            <DeleteIcon onClick={() => handleDeleteSelected()} color="error"  />
           </IconButton>
         </Tooltip>
       ) : (
@@ -297,6 +316,7 @@ export default function SongsTable() {
     setPage(0);
   };
 
+
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - (tracks?.length || 0)) : 0;
 
   const visibleRows = useMemo(
@@ -316,7 +336,7 @@ export default function SongsTable() {
         /> */}
       {/* <ReactPlayer url='https://soundcloud.com/glennmorrison/beethoven-moonlight-sonata' /> */}
       <Paper sx={{ width: '100%', mb: 2 }}>
-        <EnhancedTableToolbar numSelected={selected.length} />
+        <EnhancedTableToolbar numSelected={selected.length} selectedIds={selected} setSelected={setSelected} setIsLoading={setIsLoading} setError={setError} />
         <TableContainer>
           <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
             <EnhancedTableHead
