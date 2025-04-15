@@ -20,7 +20,6 @@ import InboxIcon from '@mui/icons-material/MoveToInbox';
 import MailIcon from '@mui/icons-material/Mail';
 
 import SongsTable from './SetsTable';
-import AddSetDrawer from './AddSetBar';
 
 const drawerWidth = 240;
 
@@ -86,7 +85,6 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 export default function PersistentDrawerLeft() {
   const theme = useTheme();
     const [open, setOpen] = React.useState(true);
-    const [addSetOpen, setAddSetOpen] = React.useState(false);
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -167,8 +165,8 @@ export default function PersistentDrawerLeft() {
       </Drawer>
       <Main open={open}>
         <DrawerHeader />
-              <SongsTable addSetOpen={addSetOpen} setAddSetOpen={setAddSetOpen} />
-        <AddSetDrawer open={addSetOpen} setOpen={setAddSetOpen} />
+              <SongsTable />
+        {/* <AddSetDrawer open={addSetOpen} setOpen={setAddSetOpen} /> */}
       </Main>
     </Box>
   );

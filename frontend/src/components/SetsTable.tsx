@@ -1,7 +1,8 @@
 import * as React from 'react';
+import { useState, useEffect, useMemo } from 'react'; // Import useEffect and useState
 // import ReactPlayer from 'react-player';
-import { Song } from 'types/song';
-import songs from 'data/songs.json';
+import { Track} from 'types/track';
+// import songs from 'data/songs.json';
 // import SoundCloudPlayer from 'components/SoundCloudPlayer';
 import { alpha } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -24,8 +25,11 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
 import { Button, TableFooter } from '@mui/material';
 
+import AddSet from './AddSet';
+import { subscribeToTracks} from 'firebaseServices/firestore';
 
-function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
+
+function descendingComparator<T>(a: T, b: T, orderBy: keyof T) : (0 | 1 | -1) {
   if (b[orderBy] < a[orderBy]) {
     return -1;
   }
@@ -41,8 +45,8 @@ function getComparator<Key extends keyof any>(
   order: Order,
   orderBy: Key
 ): (
-  a: { [key in Key]: number | string | string[] },
-  b: { [key in Key]: number | string | string[] }
+  a: { [key in Key]: number | string | string[] | null },
+  b: { [key in Key]: number | string | string[] | null }
 ) => number {
   return order === 'desc'
     ? (a, b) => descendingComparator(a, b, orderBy)
@@ -51,7 +55,7 @@ function getComparator<Key extends keyof any>(
 
 interface HeadCell {
   disablePadding: boolean;
-  id: keyof Song;
+  id: keyof Track;
   label: string;
   numeric: boolean;
 }
@@ -70,22 +74,52 @@ const headCells: readonly HeadCell[] = [
     label: 'Artist',
   },
   {
-    id: 'length',
+    id: 'album',
     numeric: false,
     disablePadding: false,
-    label: 'Length',
+    label: 'Album',
+  }, 
+  {
+    id: 'release_date',
+    numeric: false,
+    disablePadding: false,
+    label: 'Release Date',
   },
   {
-    id: 'bpm',
+    id: 'publish_date',
+    numeric: false,
+    disablePadding: false,
+    label: 'Publish Date',
+  },
+  {
+    id: 'genre',
+    numeric: false,
+    disablePadding: false,
+    label: 'Genre',
+  },
+  {
+    id: 'likes',
     numeric: true,
     disablePadding: false,
-    label: 'BPM',
+    label: 'Likes',
   },
   {
-    id: 'dateAdded',
+    id: 'playbacks',
+    numeric: true,
+    disablePadding: false,
+    label: 'Playbacks',
+  },
+  {
+    id: 'permalink',
     numeric: false,
     disablePadding: false,
-    label: 'Date Added',
+    label: 'Permalink',
+  },
+  {
+    id: 'artwork_url',
+    numeric: false,
+    disablePadding: false,
+    label: 'Artwork URL',
   },
   {
     id: 'tags',
@@ -97,7 +131,7 @@ const headCells: readonly HeadCell[] = [
 
 interface EnhancedTableProps {
   numSelected: number;
-  onRequestSort: (event: React.MouseEvent<unknown>, property: keyof Song) => void;
+  onRequestSort: (event: React.MouseEvent<unknown>, property: keyof Track) => void;
   onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void;
   order: Order;
   orderBy: string;
@@ -106,7 +140,7 @@ interface EnhancedTableProps {
 
 function EnhancedTableHead(props: EnhancedTableProps) {
   const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } = props;
-  const createSortHandler = (property: keyof Song) => (event: React.MouseEvent<unknown>) => {
+  const createSortHandler = (property: keyof Track) => (event: React.MouseEvent<unknown>) => {
     onRequestSort(event, property);
   };
 
@@ -155,6 +189,7 @@ interface EnhancedTableToolbarProps {
 }
 
 function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
+  // This is for the selecting of tracks, deleting and filtering button
   const { numSelected } = props;
   return (
     <Toolbar
@@ -175,7 +210,7 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
         </Typography>
       ) : (
         <Typography sx={{ flex: '1 1 100%' }} variant="h6" id="tableTitle" component="div">
-          Songs
+          Sets and Tracks
         </Typography>
       )}
       {numSelected > 0 ? (
@@ -195,19 +230,31 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
   );
 }
 
-export default function SongsTable(props: { addSetOpen: boolean; setAddSetOpen: (open: boolean) => void }) {
-  const { addSetOpen, setAddSetOpen } = props;
-  const [order, setOrder] = React.useState<Order>('asc');
-  const [orderBy, setOrderBy] = React.useState<keyof Song>('bpm');
-  const [selected, setSelected] = React.useState<readonly number[]>([]);
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+export default function SongsTable() {
+  const [tracks, setTracks] = useState<Track[] | []>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [_error, setError] = useState<Error | null>(null);
+  const [order, setOrder] = useState<Order>('asc');
+  const [orderBy, setOrderBy] = useState<keyof Track>('title');
+  const [selected, setSelected] = useState<readonly string[]>([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [addTrackOpen, setAddTrackOpen] = useState(false);
+  
+  useEffect(() => {
+    const unsubscribe = subscribeToTracks(setTracks, setIsLoading, setError);
 
-  const handleAddSetOpen = () => {
-    setAddSetOpen(true);
+    return () => unsubscribe();
+  }, []); // Empty dependency array ensures this runs only once on mount
+
+  const handleAddTrackOpen = () => {
+    setAddTrackOpen(true);
+  };
+  const handleAddTrackClose = () => {
+    setAddTrackOpen(false);
   };
 
-  const handleRequestSort = (_event: React.MouseEvent<unknown>, property: keyof Song) => {
+  const handleRequestSort = (_event: React.MouseEvent<unknown>, property: keyof Track) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
@@ -215,16 +262,16 @@ export default function SongsTable(props: { addSetOpen: boolean; setAddSetOpen: 
 
   const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
-      const newSelected = songs.map((n) => n.id); // use title as unique key
+      const newSelected = tracks ? tracks.map((n: Track) => n.id) : [];
       setSelected(newSelected);
       return;
     }
     setSelected([]);
   };
 
-  const handleClick = (_event: React.MouseEvent<unknown>, id: number) => {
+  const handleClick = (_event: React.MouseEvent<unknown>, id: string) => {
     const selectedIndex = selected.indexOf(id);
-    let newSelected: readonly number[] = [];
+    let newSelected: readonly string[] = [];
 
     if (selectedIndex === -1) {
       newSelected = newSelected.concat(selected, id);
@@ -250,15 +297,16 @@ export default function SongsTable(props: { addSetOpen: boolean; setAddSetOpen: 
     setPage(0);
   };
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - songs.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - (tracks?.length || 0)) : 0;
 
-  const visibleRows = React.useMemo(
+  const visibleRows = useMemo(
     () =>
-      [...songs]
+      [...(tracks ?? [])]
         .sort(getComparator(order, orderBy))
         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-    [order, orderBy, page, rowsPerPage]
+    [order, orderBy, page, rowsPerPage, tracks]
   );
+
 
   return (
     
@@ -277,54 +325,68 @@ export default function SongsTable(props: { addSetOpen: boolean; setAddSetOpen: 
               orderBy={orderBy}
               onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
-              rowCount={songs.length}
+              rowCount={tracks ? tracks.length : 0}
             />
             <TableBody>
-              {visibleRows.map((song, index) => {
-                const isItemSelected = selected.includes(song.id);
-                const labelId = `enhanced-table-checkbox-${index}`;
+  {isLoading || !tracks ? (
+    <TableRow>
+      <TableCell colSpan={7}>
+        <Box sx={{ width: '100%', p: 4 }}>
+          <Typography variant="h6">Loading songs...</Typography>
+        </Box>
+      </TableCell>
+    </TableRow>
+  ) : (
+    <>
+      {visibleRows.map((track, index) => {
+        const isItemSelected = selected.includes(track.id);
+        const labelId = `enhanced-table-checkbox-${index}`;
 
-                return (
-                  <TableRow
-                    hover
-                    onClick={(event) => handleClick(event, song.id)}
-                    role="checkbox"
-                    aria-checked={isItemSelected}
-                    tabIndex={-1}
-                    key={song.title}
-                    selected={isItemSelected}
-                    sx={{ cursor: 'pointer' }}
-                  >
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        color="primary"
-                        checked={isItemSelected}
-                        inputProps={{
-                          'aria-labelledby': labelId,
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell component="th" id={labelId} scope="row" padding="none">
-                      {song.title}
-                    </TableCell>
-                    <TableCell>{song.artist}</TableCell>
-                    <TableCell>{song.length}</TableCell>
-                    <TableCell align="right">{song.bpm}</TableCell>
-                    <TableCell>{song.dateAdded}</TableCell>
-                    <TableCell sx={{width:100, whiteSpace: 'pre-line'}}>{song.tags.join('\n')}</TableCell>
-                  </TableRow>
-                );
-              })}
-              {emptyRows > 0 && (
-                <TableRow
-                  style={{
-                    height:  53* emptyRows,
-                  }}
-                >
-                  <TableCell colSpan={7} />
-                </TableRow>
-              )}
-            </TableBody>
+        return (
+          <TableRow
+            hover
+            onClick={(event) => handleClick(event, track.id)}
+            role="checkbox"
+            aria-checked={isItemSelected}
+            tabIndex={-1}
+            key={track.title}
+            selected={isItemSelected}
+            sx={{ cursor: 'pointer' }}
+          >
+            <TableCell padding="checkbox">
+              <Checkbox
+                color="primary"
+                checked={isItemSelected}
+                inputProps={{
+                  'aria-labelledby': labelId,
+                }}
+              />
+            </TableCell>
+            <TableCell component="th" id={labelId} scope="row" padding="none">
+              {track.title}
+            </TableCell>
+            <TableCell>{track.artist}</TableCell>
+            <TableCell>{track.album}</TableCell>
+            <TableCell>{track.release_date}</TableCell>
+            <TableCell>{track.publish_date}</TableCell>
+            <TableCell>{track.genre}</TableCell>
+            <TableCell align="right">{track.likes}</TableCell>
+            <TableCell align="right">{track.playbacks}</TableCell>
+            <TableCell sx={{ width: 100, whiteSpace: 'pre-line' }}>
+              {track.tags ? track.tags.join('\n') : ''}
+            </TableCell>
+          </TableRow>
+        );
+      })}
+      {emptyRows > 0 && (
+        <TableRow style={{ height: 53 * emptyRows }}>
+          <TableCell colSpan={7} />
+        </TableRow>
+      )}
+    </>
+  )}
+</TableBody>
+
           </Table>
           <TableFooter>
             <TableRow>
@@ -332,17 +394,17 @@ export default function SongsTable(props: { addSetOpen: boolean; setAddSetOpen: 
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={handleAddSetOpen}
+                  onClick={handleAddTrackOpen}
                   sx={{ ml: 2 }}
                 >
-                  Add New Song
+                  Add New Track
                 </Button>
 
                 <TablePagination
                   sx={{ flexShrink: 0, ml: 2 }}
                   rowsPerPageOptions={[5, 10, 25]}
                   component="div"
-                  count={songs.length}
+                  count={tracks ? tracks.length : 0}
                   rowsPerPage={rowsPerPage}
                   page={page}
                   onPageChange={handleChangePage}
@@ -353,6 +415,8 @@ export default function SongsTable(props: { addSetOpen: boolean; setAddSetOpen: 
           </TableFooter>
         </TableContainer>
       </Paper>
+      <AddSet open={addTrackOpen} handleClickClose={handleAddTrackClose} />
     </Box>
+    
   );
 }
