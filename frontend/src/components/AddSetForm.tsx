@@ -7,9 +7,11 @@ import Button from '@mui/material/Button';
 // import { Typography } from '@mui/material';
 import { addTrack } from 'firebaseServices/firestore';
 
+import { useAuth } from 'components/AuthProvider';
+
 import { Track } from 'types/track';
 
-type TrackNoId = Pick<Track, 'title' | 'artist' | 'album' | 'release_date' | 'publish_date' | 'genre' | 'likes' | 'tags' | 'playbacks' | 'permalink' | 'artwork_url'>;
+type TrackNoId = Pick<Track, 'title' | 'artist' | 'album' | 'release_date' | 'publish_date' | 'genre' | 'likes' | 'tags' | 'playbacks' | 'permalink' | 'artwork_url'| 'added_by'> ;
 
 const emptyTrack: TrackNoId = {
   title: '',
@@ -23,12 +25,16 @@ const emptyTrack: TrackNoId = {
   playbacks: 0,
   permalink: '',
   artwork_url: '',
+  added_by: '', // This should be set to the current user's ID when adding a track
 };
 
-const AddTrackForm = (props: {handleClickClose: () => void}) => {
+const AddTrackForm = (props: { handleClickClose: () => void }) => {
+  const { user } = useAuth();
+  console.log('User:', user?.displayName);
   const { handleClickClose } = props;
   const [track, setTrack] = useState<TrackNoId>({
     ...emptyTrack,
+    added_by: user ? user.displayName : 'Anonymous', // Set the added_by field to the current user's ID
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,7 +47,15 @@ const AddTrackForm = (props: {handleClickClose: () => void}) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Add the track to the database (Firebase Firestore)
+    if (user) {
+      setTrack((prevTrack:TrackNoId) => ({
+        ...prevTrack,
+      }));
+    } else {
+
+      console.error('User not authenticated. Cannot add track.');
+      return;
+    }
     addTrack(track)
       .then(() => {
         console.log('Track added successfully!');
@@ -96,6 +110,7 @@ const AddTrackForm = (props: {handleClickClose: () => void}) => {
         }));
   
         console.log('Track Metadata:', data);
+        console.log('Updated Track:', track);
       } catch (error) {
         console.error('Error fetching track metadata:', error);
       }
@@ -220,10 +235,23 @@ const AddTrackForm = (props: {handleClickClose: () => void}) => {
           }
           required
         />
-    </Box>
+      </Box>
+      {!user && (
+  <Box
+    sx={{
+      color: 'red',
+      fontSize: '0.9rem',
+      fontWeight: 'bold',
+      mb: 2,
+      mt: 1,
+    }}
+  >
+    🔒 You must be logged in to add a track.
+  </Box>
+)}
     <Box>
         <DialogActions>
-    <Button variant="contained" color="primary" type="submit" sx={{ mt: 2 } } onClick={handleSubmit}>
+    <Button variant="contained" color="primary" type="submit" sx={{ mt: 2 } } onClick={handleSubmit} disabled={!user}>
            Submit
          </Button>
  </DialogActions>

@@ -24,9 +24,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
 import { Button, TableFooter } from '@mui/material';
+import LinkIcon from '@mui/icons-material/Link';
 
 import AddSet from './AddSet';
-import { subscribeToTracks, deleteTracks} from 'firebaseServices/firestore';
+import { subscribeToTracks, deleteTracks } from 'firebaseServices/firestore';
 
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) : (0 | 1 | -1) {
@@ -73,12 +74,12 @@ const headCells: readonly HeadCell[] = [
     disablePadding: false,
     label: 'Artist',
   },
-  {
-    id: 'album',
-    numeric: false,
-    disablePadding: false,
-    label: 'Album',
-  }, 
+  // {
+  //   id: 'album',
+  //   numeric: false,
+  //   disablePadding: false,
+  //   label: 'Album',
+  // }, 
   {
     id: 'release_date',
     numeric: false,
@@ -113,13 +114,7 @@ const headCells: readonly HeadCell[] = [
     id: 'permalink',
     numeric: false,
     disablePadding: false,
-    label: 'Permalink',
-  },
-  {
-    id: 'artwork_url',
-    numeric: false,
-    disablePadding: false,
-    label: 'Artwork URL',
+    label: 'Link',
   },
   {
     id: 'tags',
@@ -127,6 +122,25 @@ const headCells: readonly HeadCell[] = [
     disablePadding: false,
     label: 'Tags',
   },
+  {
+    id: 'added_by',
+    numeric: false,
+    disablePadding: false,
+    label: 'Added By',
+  }
+  // {
+  //   id: 'artwork_url',
+  //   numeric: false,
+  //   disablePadding: false,
+  //   label: 'Artwork URL',
+  // },
+  // {
+  //   id: 'tags',
+  //   numeric: false,
+  //   disablePadding: false,
+  //   label: 'Tags',
+  // },
+  
 ];
 
 interface EnhancedTableProps {
@@ -365,11 +379,11 @@ export default function SongsTable() {
         return (
           <TableRow
             hover
-            onClick={(event) => handleClick(event, track.id)}
+    
             role="checkbox"
             aria-checked={isItemSelected}
             tabIndex={-1}
-            key={track.title}
+            key={track.id}
             selected={isItemSelected}
             sx={{ cursor: 'pointer' }}
           >
@@ -380,21 +394,36 @@ export default function SongsTable() {
                 inputProps={{
                   'aria-labelledby': labelId,
                 }}
+                onClick={(event) => handleClick(event, track.id)}
               />
             </TableCell>
             <TableCell component="th" id={labelId} scope="row" padding="none">
               {track.title}
             </TableCell>
             <TableCell>{track.artist}</TableCell>
-            <TableCell>{track.album}</TableCell>
+            {/* <TableCell>{track.album}</TableCell> */}
             <TableCell>{track.release_date}</TableCell>
             <TableCell>{track.publish_date}</TableCell>
             <TableCell>{track.genre}</TableCell>
             <TableCell align="right">{track.likes}</TableCell>
             <TableCell align="right">{track.playbacks}</TableCell>
+            <TableCell align='left'>
+            {track.permalink && (
+    <Tooltip title="Open link in new tab">
+      <a
+        href={track.permalink}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <LinkIcon />
+      </a>
+    </Tooltip>
+  )}
+</TableCell>
             <TableCell sx={{ width: 100, whiteSpace: 'pre-line' }}>
               {track.tags ? track.tags.join('\n') : ''}
             </TableCell>
+            <TableCell>{track.added_by}</TableCell>
           </TableRow>
         );
       })}

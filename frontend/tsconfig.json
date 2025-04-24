@@ -1,12 +1,11 @@
 {
     "compilerOptions": {
       "baseUrl": "src", // Base directory to resolve non-relative module names
-      "target": "es5", // Specify ECMAScript target version
+      "target": "ES2015", // Specify ECMAScript target version
       "lib": [
-        "dom",
-        "dom.iterable",
-        "esnext"
+        "DOM", "ES2015", 
       ], // List of library files to be included in the compilation
+      "downlevelIteration": true,
       "allowJs": true, // Allow JavaScript files to be compiled
       "skipLibCheck": true, // Skip type checking of all declaration files
       "esModuleInterop": true, // Disables namespace imports (import * as fs from "fs") and enables CJS/AMD/UMD style imports (import fs from "fs")

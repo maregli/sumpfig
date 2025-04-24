@@ -1,6 +1,6 @@
 import React from 'react';
 import SetManager from 'components/SetManager';
-// import logo from './logo.svg';
+import { AuthProvider } from 'components/AuthProvider';
 import './App.css';
 
 function App() {
@@ -8,7 +8,9 @@ function App() {
   return (
     <div className="App" style={{ backgroundColor: 'white' }}>
       <main>
-        <SetManager />
+        <AuthProvider>
+          <SetManager />
+        </AuthProvider>
       </main>
     </div>
   );

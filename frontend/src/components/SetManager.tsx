@@ -20,6 +20,7 @@ import InboxIcon from '@mui/icons-material/MoveToInbox';
 import MailIcon from '@mui/icons-material/Mail';
 
 import SongsTable from './SetsTable';
+import LoginButton from 'components/Login';
 
 const drawerWidth = 240;
 
@@ -96,7 +97,7 @@ export default function PersistentDrawerLeft() {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
+      <CssBaseline/>
       <AppBar position="fixed" open={open}>
         <Toolbar>
           <IconButton
@@ -114,8 +115,13 @@ export default function PersistentDrawerLeft() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div">
-            {/* Title Placeholder */}
+            Title Placeholder
           </Typography>
+            {/* This Box will take up all available space, pushing the login button to the right */}
+
+          <Box sx={{ flexGrow: 1 }} />
+
+          <LoginButton />
         </Toolbar>
       </AppBar>
       <Drawer

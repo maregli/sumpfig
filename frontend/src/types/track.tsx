@@ -21,4 +21,5 @@ export interface Track {
     permalink: string | null;
   artwork_url: string | null;
   tags: string[] | null;
+  added_by: string | null;
 }
