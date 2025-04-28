@@ -1,13 +1,17 @@
 import React from 'react';
 import { Button, Typography } from '@mui/material';
-import { auth, provider } from 'firebaseServices/firebaseConfig';
+import { auth } from 'firebaseServices/firebaseConfig';
+import { GoogleAuthProvider } from 'firebase/auth';
 import { signInWithPopup, signOut } from 'firebase/auth';
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from 'components/AuthProvider';
 
 const LoginButton: React.FC = () => {
-  const { user } = useAuth();
+    const { user } = useAuth();
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+    prompt: 'select_account'});
 
   const handleLogin = async () => {
     try {
