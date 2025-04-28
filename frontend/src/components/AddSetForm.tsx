@@ -69,13 +69,14 @@ const AddTrackForm = (props: { handleClickClose: () => void }) => {
     };
 
   const fetchTrackMetadata = async () => {
+      const BACKEND_URL = process.env.REACT_APP_BACKEND_URL
       if (!track.permalink) {
         alert("Please provide a permalink.");
         return;
       }
   
       try {
-        const response = await fetch('http://127.0.0.1:5000/soundcloud/metadata', {
+        const response = await fetch(`${BACKEND_URL}/soundcloud/metadata`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
