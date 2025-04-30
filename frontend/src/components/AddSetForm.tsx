@@ -11,7 +11,7 @@ import { useAuth } from 'components/AuthProvider';
 
 import { Track } from 'types/track';
 
-type TrackNoId = Pick<Track, 'title' | 'artist' | 'album' | 'release_date' | 'publish_date' | 'genre' | 'likes' | 'tags' | 'playbacks' | 'permalink' | 'artwork_url'| 'added_by'> ;
+type TrackNoId = Omit<Track, 'id'>; ;
 
 const emptyTrack: TrackNoId = {
   title: '',
@@ -25,7 +25,8 @@ const emptyTrack: TrackNoId = {
   playbacks: 0,
   permalink: '',
   artwork_url: '',
-  added_by: '', // This should be set to the current user's ID when adding a track
+  added_by_name: '', // This should be set to the current user's ID when adding a track
+  added_by_id: '', // This should be set to the current user's ID when adding a track
 };
 
 const AddTrackForm = (props: { handleClickClose: () => void }) => {
@@ -34,7 +35,8 @@ const AddTrackForm = (props: { handleClickClose: () => void }) => {
   const { handleClickClose } = props;
   const [track, setTrack] = useState<TrackNoId>({
     ...emptyTrack,
-    added_by: user ? user.displayName : 'Anonymous', // Set the added_by field to the current user's ID
+    added_by_name: user ? user.displayName : 'Anonymous', // Set the added_by field to the current user's ID
+    added_by_id: user ? user.uid : 'Anonymous', // Set the added_by field to the current user's ID
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

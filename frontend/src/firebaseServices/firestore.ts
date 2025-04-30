@@ -1,12 +1,15 @@
 // src/firebase/firestore.ts
 
-import { collection, addDoc, getDocs, QuerySnapshot, DocumentData , onSnapshot, doc, deleteDoc} from 'firebase/firestore';
+import { collection, addDoc, getDocs, QuerySnapshot, DocumentData, onSnapshot, doc, deleteDoc, getDoc , setDoc} from 'firebase/firestore';
+
 import { db } from 'firebaseServices/firebaseConfig';
 
 import { Track } from 'types/track';
+import { UserRole } from 'types/users';
 
 // Reference to the 'tracks' collection in Firestore
 const tracksCollectionRef = collection(db, 'tracks');
+const usersCollectionRef = collection(db, 'users'); // Reference to the 'users' collection
 
 // Function to add a track
 export const addTrack = async (trackData: Omit<Track, 'id'>): Promise<void> => {
@@ -76,5 +79,64 @@ export const deleteTracks = async (trackIds: readonly string[]): Promise<void> =
   } catch (error) {
     console.error('Error deleting tracks:', error);
     throw error; // Re-throw the error to be handled by the component
+  }
+};
+
+export const addUser = async (userData: UserRole): Promise<void> => {
+  try {
+    const docRef = doc(db, 'users', userData.uid);
+    const { uid, ...userDataWithoutId } = userData;
+
+    // Use setDoc to write the data to the document
+    await setDoc(docRef, userDataWithoutId); // Use merge to update the document if it exists
+
+    console.log("Document written with ID: ", docRef.id);
+  } catch (e) {
+    console.error("Error adding document: ", e);
+  }
+};
+
+export const getUsers = async (): Promise<UserRole[]> => {
+  try {
+    const querySnapshot: QuerySnapshot<DocumentData> = await getDocs(usersCollectionRef);
+    const users: UserRole[] = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as Omit<UserRole, 'id'>),
+    }));
+    return users;
+  } catch (error) {
+    console.error('Error getting users:', error);
+    return [];
+  }
+};
+
+export const getUserFromId = async (userId: string): Promise<UserRole | null> => {
+  try {
+    const userDocRef = doc(db, 'users', userId); // Reference to the specific document
+    const userDoc = await getDoc(userDocRef); // Use getDoc to fetch a single document
+    if (userDoc.exists()) {
+      const data = userDoc.data();
+      if (
+        typeof data.displayName === 'string' &&
+        typeof data.email === 'string' &&
+        typeof data.role in ['admin', 'user']
+      ) {
+        return {
+          uid: userDoc.id,
+          displayName: data.displayName,
+          email: data.email,
+          role: data.role,
+        };
+      } else {
+        console.warn('User document is missing required fields');
+        return null;
+      }
+    } else {
+      console.log('No such document!');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error getting user:', error);
+    return null;
   }
 };

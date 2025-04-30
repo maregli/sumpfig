@@ -28,6 +28,7 @@ import LinkIcon from '@mui/icons-material/Link';
 
 import AddSet from './AddSet';
 import { subscribeToTracks, deleteTracks } from 'firebaseServices/firestore';
+import { useAuth } from 'components/AuthProvider';
 
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) : (0 | 1 | -1) {
@@ -123,7 +124,7 @@ const headCells: readonly HeadCell[] = [
     label: 'Tags',
   },
   {
-    id: 'added_by',
+    id: 'added_by_name',
     numeric: false,
     disablePadding: false,
     label: 'Added By',
@@ -200,29 +201,12 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 
 interface EnhancedTableToolbarProps {
   numSelected: number;
-  selectedIds: readonly string[];
-  setSelected: (selected: readonly string[]) => void;
-  setIsLoading: (loading: boolean) => void;
-  setError: (error: Error | null) => void; // Added error state
+  handleDeleteSelected: () => void;
 }
 
 function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
   // This is for the selecting of tracks, deleting and filtering button
-  const { numSelected, selectedIds, setSelected, setIsLoading, setError} = props;
-
-  const handleDeleteSelected = async () => {
-    setIsLoading(true); // Show loading indicator
-
-    try {
-      await deleteTracks(selectedIds); 
-      setSelected([]); // Clear selected track IDs after deletion
-    } catch (error: any) {
-      console.error('Error deleting tracks:', error);
-      setError(error); // Set error state to display error message
-    } finally {
-      setIsLoading(false); // Hide loading indicator
-    }
-  };
+  const { numSelected, handleDeleteSelected} = props;
 
   return (
     <Toolbar
@@ -273,7 +257,10 @@ export default function SongsTable() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [addTrackOpen, setAddTrackOpen] = useState(false);
-  
+
+  const { user } = useAuth();
+  console.log('User:', user?.displayName);
+
   useEffect(() => {
     const unsubscribe = subscribeToTracks(setTracks, setIsLoading, setError);
 
@@ -330,6 +317,21 @@ export default function SongsTable() {
     setPage(0);
   };
 
+  const handleDeleteSelected = async () => {
+    setIsLoading(true); // Show loading indicator
+
+
+    try {
+      await deleteTracks(selected); 
+      setSelected([]); // Clear selected track IDs after deletion
+    } catch (error: any) {
+      console.error('Error deleting tracks:', error);
+      setError(error); // Set error state to display error message
+    } finally {
+      setIsLoading(false); // Hide loading indicator
+    }
+  };
+
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - (tracks?.length || 0)) : 0;
 
@@ -350,7 +352,7 @@ export default function SongsTable() {
         /> */}
       {/* <ReactPlayer url='https://soundcloud.com/glennmorrison/beethoven-moonlight-sonata' /> */}
       <Paper sx={{ width: '100%', mb: 2 }}>
-        <EnhancedTableToolbar numSelected={selected.length} selectedIds={selected} setSelected={setSelected} setIsLoading={setIsLoading} setError={setError} />
+        <EnhancedTableToolbar numSelected={selected.length} handleDeleteSelected={handleDeleteSelected} />
         <TableContainer>
           <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
             <EnhancedTableHead
@@ -423,7 +425,7 @@ export default function SongsTable() {
             <TableCell sx={{ width: 100, whiteSpace: 'pre-line' }}>
               {track.tags ? track.tags.join('\n') : ''}
             </TableCell>
-            <TableCell>{track.added_by}</TableCell>
+            <TableCell>{track.added_by_name}</TableCell>
           </TableRow>
         );
       })}
