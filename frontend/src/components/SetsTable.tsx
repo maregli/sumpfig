@@ -27,8 +27,9 @@ import { Button, TableFooter } from '@mui/material';
 import LinkIcon from '@mui/icons-material/Link';
 
 import AddSet from './AddSet';
-import { subscribeToTracks, deleteTracks } from 'firebaseServices/firestore';
+import { subscribeToTracks, deleteTracks , getTracksFromIds} from 'firebaseServices/firestore';
 import { useAuth } from 'components/AuthProvider';
+import ErrorDialog from './ErrorDialog';
 
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) : (0 | 1 | -1) {
@@ -75,12 +76,6 @@ const headCells: readonly HeadCell[] = [
     disablePadding: false,
     label: 'Artist',
   },
-  // {
-  //   id: 'album',
-  //   numeric: false,
-  //   disablePadding: false,
-  //   label: 'Album',
-  // }, 
   {
     id: 'release_date',
     numeric: false,
@@ -129,19 +124,7 @@ const headCells: readonly HeadCell[] = [
     disablePadding: false,
     label: 'Added By',
   }
-  // {
-  //   id: 'artwork_url',
-  //   numeric: false,
-  //   disablePadding: false,
-  //   label: 'Artwork URL',
-  // },
-  // {
-  //   id: 'tags',
-  //   numeric: false,
-  //   disablePadding: false,
-  //   label: 'Tags',
-  // },
-  
+
 ];
 
 interface EnhancedTableProps {
@@ -257,10 +240,10 @@ export default function SongsTable() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [addTrackOpen, setAddTrackOpen] = useState(false);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const { user } = useAuth();
-  console.log('User:', user?.displayName);
-
   useEffect(() => {
     const unsubscribe = subscribeToTracks(setTracks, setIsLoading, setError);
 
@@ -319,11 +302,18 @@ export default function SongsTable() {
 
   const handleDeleteSelected = async () => {
     setIsLoading(true); // Show loading indicator
-
+    const selectedTracks = await getTracksFromIds(selected); // Fetch the selected tracks
+    const allTracksAddedByUser = selectedTracks.every((track) => track.added_by_id === user?.uid);
+    
 
     try {
-      await deleteTracks(selected); 
-      setSelected([]); // Clear selected track IDs after deletion
+      if (allTracksAddedByUser || user?.role === 'admin') {
+        await deleteTracks(selected);
+        setSelected([]); // Clear selected track IDs after deletion
+      } else {
+        setErrorMessage('You can only delete tracks that you yourself have added.');
+        setShowErrorDialog(true);
+      }
     } catch (error: any) {
       console.error('Error deleting tracks:', error);
       setError(error); // Set error state to display error message
@@ -467,7 +457,11 @@ export default function SongsTable() {
         </TableContainer>
       </Paper>
       <AddSet open={addTrackOpen} handleClickClose={handleAddTrackClose} />
+      <ErrorDialog
+        open={showErrorDialog}
+        onClose={() => setShowErrorDialog(false)}
+        errorMessage={errorMessage}
+      />
     </Box>
-    
   );
 }

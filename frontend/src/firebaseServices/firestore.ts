@@ -7,6 +7,8 @@ import { db } from 'firebaseServices/firebaseConfig';
 import { Track } from 'types/track';
 import { UserRole } from 'types/users';
 
+import { validateUser } from 'utils/validators/userValidators';
+
 // Reference to the 'tracks' collection in Firestore
 const tracksCollectionRef = collection(db, 'tracks');
 const usersCollectionRef = collection(db, 'users'); // Reference to the 'users' collection
@@ -35,6 +37,44 @@ export const getTracks = async (): Promise<Track[]> => {
     return [];
   }
 };
+
+export const getTrackFromId = async (trackId: string): Promise<Track | null> => {
+  try {
+    const trackDocRef = doc(db, 'tracks', trackId); // Reference to the specific document
+    const trackDoc = await getDoc(trackDocRef); // Use getDoc to fetch a single document
+    if (trackDoc.exists()) {
+      const data = trackDoc.data();
+      if (data) {
+        return {
+          id: trackDoc.id,
+          ...(data as Omit<Track, 'id'>),
+        };
+      } else {
+        console.warn('Track document is missing required fields');
+        return null;
+      }
+    } else {
+      console.log('No such document!');
+      return null;
+    }
+  }
+  catch (error) {
+    console.error('Error getting track:', error);
+    return null;
+  }
+};
+
+export const getTracksFromIds = async (trackIds: readonly string[]): Promise<Track[]> => {
+  try {
+    const trackPromises = trackIds.map((id) => getTrackFromId(id));
+    const tracks = await Promise.all(trackPromises);
+    return tracks.filter((track) => track !== null) as Track[]; // Filter out null values
+  } catch (error) {
+    console.error('Error getting tracks:', error);
+    return [];
+  }
+};
+
 
 // Function to get all tracks with real-time updates
 export const subscribeToTracks = (
@@ -90,7 +130,6 @@ export const addUser = async (userData: UserRole): Promise<void> => {
     // Use setDoc to write the data to the document
     await setDoc(docRef, userDataWithoutId); // Use merge to update the document if it exists
 
-    console.log("Document written with ID: ", docRef.id);
   } catch (e) {
     console.error("Error adding document: ", e);
   }
@@ -116,10 +155,7 @@ export const getUserFromId = async (userId: string): Promise<UserRole | null> =>
     const userDoc = await getDoc(userDocRef); // Use getDoc to fetch a single document
     if (userDoc.exists()) {
       const data = userDoc.data();
-      if (
-        typeof data.displayName === 'string' &&
-        typeof data.email === 'string' &&
-        typeof data.role in ['admin', 'user']
+      if (data && validateUser(data)
       ) {
         return {
           uid: userDoc.id,

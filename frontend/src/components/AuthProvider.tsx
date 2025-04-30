@@ -19,8 +19,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (userData) {
         setUser(userData);
       } else {
-        console.log("User not found in Firestore, adding new user...");
-        console.log("Current User:", currentUser);
         const userWithRole: UserRole = {
           uid: currentUser.uid,
           displayName: currentUser.displayName || "Anonymous",

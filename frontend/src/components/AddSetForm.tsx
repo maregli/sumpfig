@@ -31,7 +31,6 @@ const emptyTrack: TrackNoId = {
 
 const AddTrackForm = (props: { handleClickClose: () => void }) => {
   const { user } = useAuth();
-  console.log('User:', user?.displayName);
   const { handleClickClose } = props;
   const [track, setTrack] = useState<TrackNoId>({
     ...emptyTrack,
