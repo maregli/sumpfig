@@ -9,6 +9,7 @@ import GoogleIcon from '@mui/icons-material/Google'; // You can use a custom SVG
 import { useAuth } from 'components/AuthProvider';
 import { addUser, getUserFromId } from 'firebaseServices/firestore';
 import { UserRole } from 'types/users';
+import ErrorDialog from './ErrorDialog';
 
 
 const LoginButton: React.FC = () => {
@@ -17,8 +18,10 @@ const LoginButton: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordRepeat, setPasswordRepeat] = useState('');
+  const [error, setError] = useState('');
   const [displayName, setDisplayName] = useState('');
-
+  const [loginToken, setLoginToken] = useState('');
 
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
@@ -67,11 +70,33 @@ const LoginButton: React.FC = () => {
       setUser(dbUser);
       setOpen(false);
     } catch (error) {
-      console.error("Error signing in with email and password", error);
+      console.error('Login failed:', error);
+      if (typeof error === 'object' && error !== null && 'code' in error) {
+        const firebaseError = error as { code: string };
+        if (firebaseError.code === 'auth/invalid-credential') {
+          setError('Invalid credentials. Wrong email or password? Do you have an account?');
+        } else if (firebaseError.code === 'auth/missing-password') {
+          setError('Missing password. Please enter your password.');
+        } else {
+          setError('An error occurred during login. Please try again.');
+        }
+      } else {
+        setError('An unknown error occurred.');
+      }
     }
   };
 
   const handleEmailPasswordSignUp = async () => {
+    if (password !== passwordRepeat) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (loginToken !== process.env.REACT_APP_LOGIN_AUTH_TOKEN) {
+      setError('Invalid login token');
+      return;
+    }
+
     try {
       const authUser = await createUserWithEmailAndPassword(auth, email, password);
       const newUser: UserRole = {
@@ -84,8 +109,19 @@ const LoginButton: React.FC = () => {
       console.log('New EMail user created:', newUser);
       setUser(newUser);
       setOpen(false);
-    } catch (error) {
-      console.error("Error signing up with email and password", error);
+    } catch (error) {if (typeof error === 'object' && error !== null && 'code' in error) {
+      const firebaseError = error as { code: string };
+  
+      if (firebaseError.code === 'auth/email-already-in-use') {
+        setError('Email already in use');
+      } else if (firebaseError.code === 'auth/weak-password') {
+        setError('Weak password, please choose a stronger one');
+      } else {
+        setError('An error occurred during sign up. Please try again.');
+      }
+    } else {
+      setError('An unknown error occurred.');
+    }
     }
   };
 
@@ -167,8 +203,8 @@ const LoginButton: React.FC = () => {
                 type="password"
                 fullWidth
                 variant="outlined"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={passwordRepeat}
+                onChange={(e) => setPasswordRepeat(e.target.value)}
               />
               <TextField
                 margin="dense"
@@ -178,6 +214,15 @@ const LoginButton: React.FC = () => {
                 variant="outlined"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
+              />
+              <TextField
+                margin="dense"
+                label="Authorized Login Token (for Sign Up)"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={loginToken}
+                onChange={(e) => setLoginToken(e.target.value)}
               />
             </>
           )}
@@ -199,6 +244,13 @@ const LoginButton: React.FC = () => {
 
         </DialogActions>
       </Dialog>
+        <ErrorDialog
+        open={!!error}
+        onClose={() => setError('')}
+        title="Error"
+        message={error}
+        messageType="hint"
+      />
     </>
   );
 }

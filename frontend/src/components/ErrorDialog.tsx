@@ -1,51 +1,67 @@
-// ErrorDialog.tsx
-
 import React from 'react';
-import { Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Typography, Button, styled } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography } from '@mui/material';
+import { styled, useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
+import IconButton from '@mui/material/IconButton';
 
-interface ErrorDialogProps {
-  errorMessage: string;
+type MessageType = 'error' | 'hint';
+
+interface CustomDialogProps {
   open: boolean;
   onClose: () => void;
+  title: string;
+  message: string;
+  messageType?: MessageType; // <- New prop
 }
 
-const ErrorDialog: React.FC<ErrorDialogProps> = ({ errorMessage, open, onClose }) => {
+const BootstrapDialog = styled(Dialog)<{ messageType?: MessageType }>(({ theme, messageType }) => ({
+  '& .MuiDialogTitle-root': {
+    backgroundColor:
+      messageType === 'error'
+        ? theme.palette.error.main
+        : theme.palette.info.main, // You can also use `primary`, `warning`, etc.
+    color: theme.palette.common.white,
+    padding: theme.spacing(2, 3),
+  },
+  '& .MuiDialogContent-root': {
+    padding: theme.spacing(2, 3),
+  },
+  '& .MuiDialogActions-root': {
+    padding: theme.spacing(1, 3),
+  },
+}));
+
+const ErrorDialog: React.FC<CustomDialogProps> = ({
+  open,
+  onClose,
+  title,
+  message,
+  messageType = 'error',
+}) => {
+  const theme = useTheme();
+
   return (
-    <BootstrapDialog
-      onClose={onClose}
-      aria-labelledby="customized-dialog-title"
-      open={open}
-    >
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" id="customized-dialog-title">Error</Typography>
+    <BootstrapDialog open={open} onClose={onClose} messageType={messageType}>
+      <DialogTitle>
+        {title}
         <IconButton
           aria-label="close"
           onClick={onClose}
-          sx={(theme) => ({
-            color: theme.palette.grey[500],
-          })}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            top: 8,
+            color: theme.palette.common.white,
+          }}
         >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-
-      <DialogContent dividers>
-        <Typography variant="body1" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-          {errorMessage}
-        </Typography>
+      <DialogContent>
+        <Typography>{message}</Typography>
       </DialogContent>
-
       <DialogActions>
-        <Button
-          variant="contained"
-          color="error"
-          onClick={onClose}
-          sx={{
-            margin: 1,
-            textTransform: 'none',
-          }}
-        >
+        <Button variant="contained" color={messageType === 'error' ? 'error' : 'info'} onClick={onClose}>
           Close
         </Button>
       </DialogActions>
@@ -54,26 +70,3 @@ const ErrorDialog: React.FC<ErrorDialogProps> = ({ errorMessage, open, onClose }
 };
 
 export default ErrorDialog;
-
-const BootstrapDialog = styled(Dialog)(({ theme }) => ({
-  '& .MuiDialog-paper': {
-    borderRadius: theme.shape.borderRadius * 2,
-    padding: theme.spacing(2),
-  },
-  '& .MuiDialogTitle-root': {
-    backgroundColor: theme.palette.error.main,
-    color: theme.palette.common.white,
-    padding: theme.spacing(2, 3),
-  },
-  '& .MuiDialogContent-root': {
-    padding: theme.spacing(2),
-  },
-  '& .MuiDialogActions-root': {
-    padding: theme.spacing(1),
-    display: 'flex',
-    justifyContent: 'center',
-  },
-  '& .MuiButton-contained': {
-    borderRadius: theme.shape.borderRadius,
-  },
-}));

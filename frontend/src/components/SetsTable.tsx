@@ -460,7 +460,9 @@ export default function SongsTable() {
       <ErrorDialog
         open={showErrorDialog}
         onClose={() => setShowErrorDialog(false)}
-        errorMessage={errorMessage}
+        title="Error"
+        message={errorMessage}
+        messageType="error"
       />
     </Box>
   );
