@@ -1,6 +1,6 @@
 // src/firebase/firestore.ts
 
-import { collection, addDoc, getDocs, QuerySnapshot, DocumentData, onSnapshot, doc, deleteDoc, getDoc , setDoc, updateDoc} from 'firebase/firestore';
+import { collection, addDoc, getDocs, QuerySnapshot, DocumentData, onSnapshot, doc, deleteDoc, getDoc , setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 
 import { db } from 'firebaseServices/firebaseConfig';
 
@@ -177,6 +177,24 @@ export const getUserFromId = async (userId: string): Promise<UserRole | null> =>
   }
 };
 
+export const getDisplayNameFromUserId = async (userId: string): Promise<string> => {
+  try {
+    const userDocRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userDocRef);
+
+    if (userDoc.exists()) {
+      const data = userDoc.data();
+      return typeof data.displayName === 'string' ? data.displayName : 'Anonymous';
+    } else {
+      console.warn(`User not found for UID: ${userId}`);
+      return 'Anonymous';
+    }
+  } catch (error) {
+    console.error(`Error fetching display name for UID ${userId}:`, error);
+    return 'Anonymous';
+  }
+};
+
 // Function to submit or update a rating for a track
 export const submitRating = async (trackId: string, userId: string, rating: number): Promise<void> => {
   try {
@@ -203,5 +221,48 @@ export const submitRating = async (trackId: string, userId: string, rating: numb
     }
   } catch (error) {
     console.error('Error submitting rating:', error);
+  }
+};
+
+export const postComment = async (trackId: string, userId: string, comment: string): Promise<void> => {
+  try {
+    // Reference to the track's comments subcollection
+    const trackDocRef = doc(db, 'tracks', trackId);
+    const commentsCollectionRef = collection(trackDocRef, 'comments');
+
+    // Create a new comment document
+    await addDoc(commentsCollectionRef, {
+      author: userId,
+      text: comment,
+      timestamp: new Date(),
+    });
+    console.log(`Comment added for track ${trackId} by user ${userId}`);
+  } catch (error) {
+    console.error('Error posting comment:', error);
+  }
+}
+
+interface TrackComment {
+  id?: string;
+  text: string;
+  author: string;
+  timestamp: Date;
+}
+
+export const getComments = async (trackId: string): Promise<TrackComment[]> => {
+  try {
+    const trackDocRef = doc(db, 'tracks', trackId);
+    const commentsCollectionRef = collection(trackDocRef, 'comments');
+
+    const querySnapshot: QuerySnapshot<DocumentData> = await getDocs(commentsCollectionRef);
+    const comments: TrackComment[] = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as Omit<TrackComment, 'id'>),
+      timestamp: (doc.data().timestamp as Timestamp).toDate(), // convert Firestore Timestamp to Date
+    }));
+    return comments;
+  } catch (error) {
+    console.error('Error getting comments:', error);
+    return [];
   }
 };

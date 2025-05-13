@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import {
   IconButton,
   Collapse,
@@ -18,15 +19,17 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { useAuth } from './AuthProvider';
 import { SIDEBAR_WIDTH } from 'utils/constants';
-import { deleteTracks, getTracksFromIds } from 'firebaseServices/firestore';
+import { deleteTracks, getTracksFromIds , postComment, getComments, getDisplayNameFromUserId, getTrackFromId} from 'firebaseServices/firestore';
 import { formatDistanceToNow } from 'date-fns';
 
 
-interface Comment {
+interface TrackComment {
+  id?: string;
   text: string;
   author: string;
   timestamp: Date;
 }
+
 
 interface SmallSidebarProps {
   trackId: string;
@@ -44,8 +47,10 @@ export default function SmallSidebar({
   setShowErrorDialog,
 }: SmallSidebarProps) {
   const { user } = useAuth();
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [comments, setComments] = useState<TrackComment[]>([]);
   const [newComment, setNewComment] = useState('');
+  const [_isLoadingComments, setIsLoadingComments] = useState(false);
+  const [trackTitle, setTrackTitle] = useState('');
 
   const handleDeleteSelected = async () => {
     const selectedTracks = await getTracksFromIds([trackId]);
@@ -68,13 +73,22 @@ export default function SmallSidebar({
 
   const handleAddComment = () => {
     if (newComment.trim()) {
-      const comment: Comment = {
+      const comment: TrackComment = {
         text: newComment.trim(),
         author: user?.displayName || 'Anonymous',
         timestamp: new Date(),
       };
       setComments([...comments, comment]);
       setNewComment('');
+      postComment(trackId, user?.uid || '', newComment.trim())
+        .then(() => {
+          console.log('Comment posted successfully');
+        })
+        .catch((error) => {
+          console.error('Error posting comment:', error);
+          setErrorMessage('Failed to post comment. Please try again.');
+          setShowErrorDialog(true);
+        });
     }
   };
 
@@ -82,6 +96,52 @@ export default function SmallSidebar({
     console.log(`Edit track ${trackId}`);
     // Placeholder for future implementation
   };
+
+  useEffect(() => {
+    const loadCommentsWithDisplayNames = async () => {
+      if (!trackId || !open) return;
+      setIsLoadingComments(true);
+  
+      try {
+        const fetchedTrack = await getTrackFromId(trackId);
+        if (fetchedTrack) {
+          setTrackTitle(fetchedTrack.title || 'Unknown Track');
+        } else {
+          setErrorMessage('Track not found.');
+          setShowErrorDialog(true);
+          return;
+        }
+        const fetchedComments = await getComments(trackId);
+  
+        const userIds = Array.from(new Set(fetchedComments.map((c) => c.author)));
+  
+        // Fetch display names in parallel
+        const displayNames = await Promise.all(
+          userIds.map((uid) => getDisplayNameFromUserId(uid))
+        );
+  
+        // Map userId -> displayName
+        const userMap = new Map(userIds.map((uid, idx) => [uid, displayNames[idx]]));
+  
+        // Replace author ID with display name
+        const commentsWithNames = fetchedComments.map((comment) => ({
+          ...comment,
+          author: userMap.get(comment.author) || 'Anonymous',
+        }));
+  
+        setComments(commentsWithNames);
+      } catch (error) {
+        console.error('Error loading comments:', error);
+        setErrorMessage('Failed to load comments.');
+        setShowErrorDialog(true);
+      } finally {
+        setIsLoadingComments(false);
+      }
+    };
+  
+    loadCommentsWithDisplayNames();
+  }, [trackId, open]);
+  
 
   return (
     <Collapse in={open} orientation="horizontal">
@@ -107,7 +167,7 @@ export default function SmallSidebar({
 
         {/* Title */}
         <Typography variant="h6" gutterBottom>
-          Comments for Track ID: {trackId}
+          {trackTitle}
         </Typography>
 
         {/* New Comment Input */}
