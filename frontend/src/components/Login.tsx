@@ -1,11 +1,14 @@
 import React, {useState} from 'react';
 import { Button, Typography, TextField, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { auth } from 'firebaseServices/firebaseConfig';
-import { GoogleAuthProvider } from 'firebase/auth';
-import { signInWithPopup, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+// import { GoogleAuthProvider } from 'firebase/auth';
+import {
+  // signInWithPopup,
+  signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword
+} from 'firebase/auth';
 // import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
-import GoogleIcon from '@mui/icons-material/Google'; // You can use a custom SVG or this icon
+// import GoogleIcon from '@mui/icons-material/Google'; // You can use a custom SVG or this icon
 import { useAuth } from 'components/AuthProvider';
 import { addUser, getUserFromId } from 'firebaseServices/firestore';
 import { UserRole } from 'types/users';
@@ -23,35 +26,35 @@ const LoginButton: React.FC = () => {
   const [displayName, setDisplayName] = useState('');
   const [loginToken, setLoginToken] = useState('');
 
-  const handleGoogleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({
-      prompt: 'select_account'
-    });
+  // const handleGoogleLogin = async () => {
+  //   const provider = new GoogleAuthProvider();
+  //   provider.setCustomParameters({
+  //     prompt: 'select_account'
+  //   });
 
-    try {
-      const authUser = await signInWithPopup(auth, provider);
-      const dbUser = await getUserFromId(authUser.user.uid);
-      if (!dbUser) {
-        console.log('Google User not found in Firestore, creating new user...');
-        const newUser: UserRole = {
-          uid: authUser.user.uid,
-          displayName: authUser.user.displayName || 'Anonymous',
-          email: authUser.user.email || 'Anonymous',
-          role: 'user', // Default role, you can change this based on your logic
-        };
-        await addUser(newUser);
-        setUser(newUser);
-        console.log('Set new user:', newUser);
-      } else {
-        setUser(dbUser);
-        console.log('User found in Firestore:', dbUser);
-      }
-      setOpen(false);
-    } catch (err) {
-      console.error('Login failed:', err);
-    }
-  };
+  //   try {
+  //     const authUser = await signInWithPopup(auth, provider);
+  //     const dbUser = await getUserFromId(authUser.user.uid);
+  //     if (!dbUser) {
+  //       console.log('Google User not found in Firestore, creating new user...');
+  //       const newUser: UserRole = {
+  //         uid: authUser.user.uid,
+  //         displayName: authUser.user.displayName || 'Anonymous',
+  //         email: authUser.user.email || 'Anonymous',
+  //         role: 'user', // Default role, you can change this based on your logic
+  //       };
+  //       await addUser(newUser);
+  //       setUser(newUser);
+  //       console.log('Set new user:', newUser);
+  //     } else {
+  //       setUser(dbUser);
+  //       console.log('User found in Firestore:', dbUser);
+  //     }
+  //     setOpen(false);
+  //   } catch (err) {
+  //     console.error('Login failed:', err);
+  //   }
+  // };
 
   const handleLogout = async () => {
     try {
@@ -154,7 +157,7 @@ const LoginButton: React.FC = () => {
         <DialogTitle textAlign="center">Welcome</DialogTitle>
   
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Button
+          {/* <Button
             variant="contained"
             onClick={handleGoogleLogin}
             startIcon={<GoogleIcon />}
@@ -175,7 +178,7 @@ const LoginButton: React.FC = () => {
   
           <Typography variant="body2" color="textSecondary" sx={{ my: 1 }}>
             — or sign in with email —
-          </Typography>
+          </Typography> */}
   
           <TextField
             margin="dense"
