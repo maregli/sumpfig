@@ -1,5 +1,6 @@
 import React from 'react';
-import SetManager from 'components/SetManager';
+// import SetManager from 'components/SetManager';
+import AppLayout from 'components/AppLayout';
 import { AuthProvider } from 'components/AuthProvider';
 import './App.css';
 
@@ -9,7 +10,7 @@ function App() {
     <div className="App" style={{ backgroundColor: 'white' }}>
       <main>
         <AuthProvider>
-          <SetManager />
+          <AppLayout/>
         </AuthProvider>
       </main>
     </div>

@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from 'react'; // Import useEffect and us
 import { Track} from 'types/track';
 // import songs from 'data/songs.json';
 // import SoundCloudPlayer from 'components/SoundCloudPlayer';
-import { alpha } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -17,21 +16,18 @@ import TableSortLabel from '@mui/material/TableSortLabel';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
-import Checkbox from '@mui/material/Checkbox';
-import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import DeleteIcon from '@mui/icons-material/Delete';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
 import { Button, TableFooter } from '@mui/material';
 import LinkIcon from '@mui/icons-material/Link';
 
 import AddSet from './AddSet';
-import { subscribeToTracks, deleteTracks , getTracksFromIds} from 'firebaseServices/firestore';
-import { useAuth } from 'components/AuthProvider';
+import { subscribeToTracks } from 'firebaseServices/firestore';
+// import { useAuth } from 'components/AuthProvider';
 import ErrorDialog from './ErrorDialog';
 import StarRating from './StarRating';
-
+import SmallSidebar from './SidebarTrack';
+import { SIDEBAR_WIDTH } from 'utils/constants';
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) : (0 | 1 | -1) {
   if (b[orderBy] < a[orderBy]) {
@@ -129,16 +125,13 @@ const headCells: readonly HeadCell[] = [
 ];
 
 interface EnhancedTableProps {
-  numSelected: number;
   onRequestSort: (event: React.MouseEvent<unknown>, property: keyof Track) => void;
-  onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void;
   order: Order;
   orderBy: string;
-  rowCount: number;
 }
 
 function EnhancedTableHead(props: EnhancedTableProps) {
-  const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } = props;
+  const { order, orderBy, onRequestSort } = props;
   const createSortHandler = (property: keyof Track) => (event: React.MouseEvent<unknown>) => {
     onRequestSort(event, property);
   };
@@ -146,22 +139,12 @@ function EnhancedTableHead(props: EnhancedTableProps) {
   return (
     <TableHead>
       <TableRow>
-        <TableCell padding="checkbox">
-          <Checkbox
-            color="primary"
-            indeterminate={numSelected > 0 && numSelected < rowCount}
-            checked={rowCount > 0 && numSelected === rowCount}
-            onChange={onSelectAllClick}
-            inputProps={{
-              'aria-label': 'select all songs',
-            }}
-          />
-        </TableCell>
+
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
             align={headCell.numeric ? 'right' : 'left'}
-            padding={headCell.disablePadding ? 'none' : 'normal'}
+            padding='normal'
             sortDirection={orderBy === headCell.id ? order : false}
           >
             <TableSortLabel
@@ -183,14 +166,9 @@ function EnhancedTableHead(props: EnhancedTableProps) {
   );
 }
 
-interface EnhancedTableToolbarProps {
-  numSelected: number;
-  handleDeleteSelected: () => void;
-}
 
-function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
+function EnhancedTableToolbar() {
   // This is for the selecting of tracks, deleting and filtering button
-  const { numSelected, handleDeleteSelected} = props;
 
   return (
     <Toolbar
@@ -199,39 +177,17 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
           pl: { sm: 2 },
           pr: { xs: 1, sm: 1 },
         },
-        numSelected > 0 && {
-          bgcolor: (theme) =>
-            alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity),
-        },
       ]}
     >
-      {numSelected > 0 ? (
-        <Typography sx={{ flex: '1 1 100%' }} color="inherit" variant="subtitle1" component="div">
-          {numSelected} selected
-        </Typography>
-      ) : (
-        <Typography sx={{ flex: '1 1 100%' }} variant="h6" id="tableTitle" component="div">
-          Sets and Tracks
-        </Typography>
-      )}
-      {numSelected > 0 ? (
-        <Tooltip title="Delete">
-          <IconButton>
-            <DeleteIcon onClick={() => handleDeleteSelected()} color="error"  />
-          </IconButton>
-        </Tooltip>
-      ) : (
-        <Tooltip title="Filter list">
-          <IconButton>
-            <FilterListIcon />
-          </IconButton>
-        </Tooltip>
-      )}
+      <Typography sx={{ flex: '1 1 100%' }}>
+        Sets and Tracks
+      </Typography>
     </Toolbar>
   );
 }
 
 export default function SongsTable() {
+  const [openSidebar, setOpenSidebar] = useState(false);
   const [tracks, setTracks] = useState<Track[] | []>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [_error, setError] = useState<Error | null>(null);
@@ -244,7 +200,7 @@ export default function SongsTable() {
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const { user } = useAuth();
+  // const { user } = useAuth();
   useEffect(() => {
     const unsubscribe = subscribeToTracks(setTracks, setIsLoading, setError);
 
@@ -264,32 +220,9 @@ export default function SongsTable() {
     setOrderBy(property);
   };
 
-  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      const newSelected = tracks ? tracks.map((n: Track) => n.id) : [];
-      setSelected(newSelected);
-      return;
-    }
-    setSelected([]);
-  };
-
   const handleClick = (_event: React.MouseEvent<unknown>, id: string) => {
-    const selectedIndex = selected.indexOf(id);
-    let newSelected: readonly string[] = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-    setSelected(newSelected);
+    setSelected([id]);
+    setOpenSidebar(true);
   };
 
   const handleChangePage = (_event: unknown, newPage: number) => {
@@ -299,28 +232,6 @@ export default function SongsTable() {
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
-  };
-
-  const handleDeleteSelected = async () => {
-    setIsLoading(true); // Show loading indicator
-    const selectedTracks = await getTracksFromIds(selected); // Fetch the selected tracks
-    const allTracksAddedByUser = selectedTracks.every((track) => track.added_by_id === user?.uid);
-    
-
-    try {
-      if (allTracksAddedByUser || user?.role === 'admin') {
-        await deleteTracks(selected);
-        setSelected([]); // Clear selected track IDs after deletion
-      } else {
-        setErrorMessage('You can only delete tracks that you yourself have added.');
-        setShowErrorDialog(true);
-      }
-    } catch (error: any) {
-      console.error('Error deleting tracks:', error);
-      setError(error); // Set error state to display error message
-    } finally {
-      setIsLoading(false); // Hide loading indicator
-    }
   };
 
 
@@ -337,22 +248,18 @@ export default function SongsTable() {
 
   return (
     
-    <Box sx={{ width: '100%' }}>
-      {/* <SoundCloudPlayer
-        src="https://soundcloud.com/billieeilish/birds-of-a-feather?utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing"
-        /> */}
-      {/* <ReactPlayer url='https://soundcloud.com/glennmorrison/beethoven-moonlight-sonata' /> */}
-      <Paper sx={{ width: '100%', mb: 2 }}>
-        <EnhancedTableToolbar numSelected={selected.length} handleDeleteSelected={handleDeleteSelected} />
+    <Box sx={{ width: '100%', display: 'flex'}}>
+      <Paper sx={{
+        width: openSidebar ? `calc(100% - 300px)` : '100%',
+        marginRight: openSidebar ? {SIDEBAR_WIDTH} : '0px',
+      }}>
+        <EnhancedTableToolbar />
         <TableContainer>
           <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
             <EnhancedTableHead
-              numSelected={selected.length}
               order={order}
               orderBy={orderBy}
-              onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
-              rowCount={tracks ? tracks.length : 0}
             />
             <TableBody>
   {isLoading || !tracks ? (
@@ -372,34 +279,22 @@ export default function SongsTable() {
         return (
           <TableRow
             hover
-    
             role="checkbox"
             aria-checked={isItemSelected}
             tabIndex={-1}
             key={track.id}
             selected={isItemSelected}
             sx={{ cursor: 'pointer' }}
+            onClick={(event) => handleClick(event, track.id)}
           >
-            <TableCell padding="checkbox">
-              <Checkbox
-                color="primary"
-                checked={isItemSelected}
-                inputProps={{
-                  'aria-labelledby': labelId,
-                }}
-                onClick={(event) => handleClick(event, track.id)}
-              />
-            </TableCell>
-            <TableCell component="th" id={labelId} scope="row" padding="none">
+            <TableCell component="th" id={labelId} scope="row" padding="normal" onClick={() => setOpenSidebar(true)}>
               {track.title}
             </TableCell>
             <TableCell>{track.artist}</TableCell>
-            {/* <TableCell>{track.album}</TableCell> */}
             <TableCell>{track.publish_date}</TableCell>
             <TableCell>
               <StarRating id={track.id} />
             </TableCell>
-            {/* <TableCell>{track.length}</TableCell> */}
             <TableCell>{track.genre}</TableCell>
             <TableCell align="right">{track.likes}</TableCell>
             <TableCell align="right">{track.playbacks}</TableCell>
@@ -468,6 +363,13 @@ export default function SongsTable() {
         message={errorMessage}
         messageType="error"
       />
+      <SmallSidebar
+        trackId={selected.length > 0 ? selected[0] : ''}
+        open={openSidebar}
+        setOpen={setOpenSidebar}
+        setErrorMessage={setErrorMessage}
+        setShowErrorDialog={setShowErrorDialog}
+        />
     </Box>
   );
 }
