@@ -1,6 +1,6 @@
 // src/firebase/firestore.ts
 
-import { collection, addDoc, getDocs, QuerySnapshot, DocumentData, onSnapshot, doc, deleteDoc, getDoc , setDoc} from 'firebase/firestore';
+import { collection, addDoc, getDocs, QuerySnapshot, DocumentData, onSnapshot, doc, deleteDoc, getDoc , setDoc, updateDoc} from 'firebase/firestore';
 
 import { db } from 'firebaseServices/firebaseConfig';
 
@@ -174,5 +174,34 @@ export const getUserFromId = async (userId: string): Promise<UserRole | null> =>
   } catch (error) {
     console.error('Error getting user:', error);
     return null;
+  }
+};
+
+// Function to submit or update a rating for a track
+export const submitRating = async (trackId: string, userId: string, rating: number): Promise<void> => {
+  try {
+    // Reference to the track's ratings subcollection
+    const trackDocRef = doc(db, 'tracks', trackId);
+    const ratingsCollectionRef = collection(trackDocRef, 'ratings');
+
+    // Check if the user has already rated the track
+    const userRatingDocRef = doc(ratingsCollectionRef, userId);
+    const userRatingDoc = await getDoc(userRatingDocRef);
+
+    if (userRatingDoc.exists()) {
+      // If the user has already rated, update the rating
+      await updateDoc(userRatingDocRef, {
+        rating: rating, // Update the rating field with the new rating
+      });
+      console.log(`Updated rating for track ${trackId} by user ${userId}`);
+    } else {
+      // If the user hasn't rated, create a new document with the rating
+      await setDoc(userRatingDocRef, {
+        rating: rating, // Store the user's rating
+      });
+      console.log(`Submitted rating for track ${trackId} by user ${userId}`);
+    }
+  } catch (error) {
+    console.error('Error submitting rating:', error);
   }
 };

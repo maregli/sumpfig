@@ -30,6 +30,7 @@ import AddSet from './AddSet';
 import { subscribeToTracks, deleteTracks , getTracksFromIds} from 'firebaseServices/firestore';
 import { useAuth } from 'components/AuthProvider';
 import ErrorDialog from './ErrorDialog';
+import StarRating from './StarRating';
 
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) : (0 | 1 | -1) {
@@ -77,17 +78,17 @@ const headCells: readonly HeadCell[] = [
     label: 'Artist',
   },
   {
-    id: 'release_date',
-    numeric: false,
-    disablePadding: false,
-    label: 'Release Date',
-  },
-  {
     id: 'publish_date',
     numeric: false,
     disablePadding: false,
     label: 'Publish Date',
   },
+  {
+    id: 'rating' as keyof Track,
+    numeric: false,
+    disablePadding: false,
+    label: 'Rating',
+  },  
   {
     id: 'genre',
     numeric: false,
@@ -394,8 +395,11 @@ export default function SongsTable() {
             </TableCell>
             <TableCell>{track.artist}</TableCell>
             {/* <TableCell>{track.album}</TableCell> */}
-            <TableCell>{track.release_date}</TableCell>
             <TableCell>{track.publish_date}</TableCell>
+            <TableCell>
+              <StarRating id={track.id} />
+            </TableCell>
+            {/* <TableCell>{track.length}</TableCell> */}
             <TableCell>{track.genre}</TableCell>
             <TableCell align="right">{track.likes}</TableCell>
             <TableCell align="right">{track.playbacks}</TableCell>

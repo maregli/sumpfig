@@ -16,9 +16,8 @@ type TrackNoId = Omit<Track, 'id'>; ;
 const emptyTrack: TrackNoId = {
   title: '',
   artist: '',
-  album: '',
-  release_date: '',
   publish_date: '',
+  rating: null,
   genre: '',
   likes: 0,
   tags: [],
@@ -101,7 +100,6 @@ const AddTrackForm = (props: { handleClickClose: () => void }) => {
           ...prevTrack,
           title: data.title || prevTrack.title,
           artist: data.artist || prevTrack.artist,
-          album: data.album || prevTrack.album,
           artwork_url: data.artwork_url || prevTrack.artwork_url,
           release_date: data.release_date ? formatDate(data.release_date) : "",
           publish_date: data.publish_date ? formatDate(data.publish_date) : "",

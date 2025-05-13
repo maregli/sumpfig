@@ -12,9 +12,8 @@ export interface Track {
   id: string;
     title: string | null;
     artist: string | null;
-    album: string | null;
-    release_date: string | null;
-    publish_date: string | null;
+  publish_date: string | null;
+  rating: number | null;
     genre: string | null;
     likes: number | null;
     playbacks: number | null;
