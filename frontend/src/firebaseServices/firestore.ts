@@ -1,6 +1,21 @@
 // src/firebase/firestore.ts
 
-import { collection, addDoc, getDocs, QuerySnapshot, DocumentData, onSnapshot, doc, deleteDoc, getDoc , setDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import {
+  collection,
+  addDoc,
+  getDocs,
+  QuerySnapshot,
+  DocumentData,
+  onSnapshot,
+  doc,
+  deleteDoc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  Timestamp, 
+  query,
+  where
+} from 'firebase/firestore';
 
 import { db } from 'firebaseServices/firebaseConfig';
 
@@ -104,6 +119,40 @@ export const subscribeToTracks = (
 
   return () => unsubscribe();
 };
+
+
+// Function to get tracks filtered by group_id with real-time updates
+export const subscribeToTracksByGroupId = (
+  groupId: string,
+  setTracks: (tracks: Track[]) => void,
+  setIsLoading: (loading: boolean) => void,
+  setError: (error: Error | null) => void
+): () => void => {
+  setIsLoading(true);
+  setError(null);
+
+  const filteredQuery = query(tracksCollectionRef, where('group_id', '==', groupId));
+
+  const unsubscribe = onSnapshot(
+    filteredQuery,
+    (snapshot) => {
+      const tracks: Track[] = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Track, 'id'>),
+      }));
+      setTracks(tracks);
+      setIsLoading(false);
+    },
+    (error) => {
+      console.error("Error getting filtered tracks:", error);
+      setError(error);
+      setIsLoading(false);
+    }
+  );
+
+  return () => unsubscribe();
+};
+
 
 export const deleteTracks = async (trackIds: readonly string[]): Promise<void> => {
   try {
