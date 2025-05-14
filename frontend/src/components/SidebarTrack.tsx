@@ -167,9 +167,18 @@ export default function SmallSidebar({
         </Box>
 
         {/* Title */}
-        <Typography variant="h6" gutterBottom>
-          {trackTitle}
-        </Typography>
+        <Typography
+  variant="h6"
+  gutterBottom
+  sx={{
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+    color: 'black',
+    textTransform: 'capitalize',
+  }}
+>
+  {trackTitle}
+</Typography>
         <Box sx={{backgroundColor: "#f0f0f0", padding: 1, borderRadius: 1, mb: 2}} alignContent={"center"}>
           <StarRating id={trackId}/>
         </Box>
