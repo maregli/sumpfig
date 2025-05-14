@@ -38,6 +38,7 @@ interface SmallSidebarProps {
   setOpen: (open: boolean) => void;
   setErrorMessage: (message: string) => void;
   setShowErrorDialog: (show: boolean) => void;
+  setSelected: (selected: string[]) => void;
 }
 
 export default function SmallSidebar({
@@ -46,6 +47,7 @@ export default function SmallSidebar({
   setOpen,
   setErrorMessage,
   setShowErrorDialog,
+  setSelected,
 }: SmallSidebarProps) {
   const { user } = useAuth();
   const [comments, setComments] = useState<TrackComment[]>([]);
@@ -97,6 +99,11 @@ export default function SmallSidebar({
     console.log(`Edit track ${trackId}`);
     // Placeholder for future implementation
   };
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelected([]);
+  }
 
   useEffect(() => {
     const loadCommentsWithDisplayNames = async () => {
@@ -161,7 +168,7 @@ export default function SmallSidebar({
       >
         {/* Close Button */}
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <IconButton onClick={() => setOpen(false)}>
+          <IconButton onClick={() => handleClose()}>
             <CloseIcon />
           </IconButton>
         </Box>

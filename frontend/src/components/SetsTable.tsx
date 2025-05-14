@@ -254,13 +254,20 @@ export default function SongsTable() {
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - (tracks?.length || 0)) : 0;
 
-  const visibleRows = useMemo(
-    () =>
-      [...(tracks ?? [])]
-        .sort(getComparator(order, orderBy))
-        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-    [order, orderBy, page, rowsPerPage, tracks]
-  );
+  // In order to add rating also to sort logic
+  const computedTracks = useMemo(() => {
+    return tracks.map((track) => ({
+      ...track,
+      rating: averageRatings[track.id] ?? null, 
+    }));
+  }, [tracks, averageRatings]);
+  
+  const visibleRows = useMemo(() => {
+    return [...computedTracks]
+      .sort(getComparator(order, orderBy))
+      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  }, [order, orderBy, page, rowsPerPage, computedTracks]);
+  
 
 
   return (
@@ -399,6 +406,7 @@ export default function SongsTable() {
         setOpen={setOpenSidebar}
         setErrorMessage={setErrorMessage}
         setShowErrorDialog={setShowErrorDialog}
+        setSelected={setSelected}
         />
     </Box>
   );
