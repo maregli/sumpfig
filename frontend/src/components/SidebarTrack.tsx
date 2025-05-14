@@ -81,19 +81,38 @@ export default function SmallSidebar({
         author: user?.displayName || 'Anonymous',
         timestamp: new Date(),
       };
+  
+      // Optimistically update UI
       setComments([...comments, comment]);
       setNewComment('');
-      postComment(trackId, user?.uid || '', newComment.trim())
-        .then(() => {
-          console.log('Comment posted successfully');
-        })
-        .catch((error) => {
-          console.error('Error posting comment:', error);
-          setErrorMessage('Failed to post comment. Please try again.');
-          setShowErrorDialog(true);
-        });
+  
+      if (user) {
+        // Logged-in: persist comment to backend
+        postComment(trackId, user.uid, newComment.trim())
+          .then(() => {
+            console.log('Comment posted successfully');
+          })
+          .catch((error) => {
+            console.error('Error posting comment:', error);
+            setErrorMessage('Failed to post comment. Please try again.');
+            setShowErrorDialog(true);
+          });
+      } else {
+        // Not logged in: write to localStorage
+        try {
+          const key = `comments_${trackId}`;
+          const existing = localStorage.getItem(key);
+          const parsed: TrackComment[] = existing ? JSON.parse(existing) : [];
+          parsed.push(comment);
+          localStorage.setItem(key, JSON.stringify(parsed));
+          console.log('Comment saved to local cache');
+        } catch (e) {
+          console.error('Error saving comment to local cache:', e);
+        }
+      }
     }
   };
+  
 
   const handleEditTrack = () => {
     console.log(`Edit track ${trackId}`);

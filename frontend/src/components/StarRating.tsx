@@ -45,8 +45,19 @@ const StarRating: React.FC<StarRatingProps> = ({ id = '' }) => {
         .catch((error) => {
           console.error('Error submitting rating:', error);
         });
+    } else {
+      // Not logged in: save rating to localStorage
+      try {
+        const key = `rating_${trackId}`;
+        localStorage.setItem(key, JSON.stringify({ rating, timestamp: new Date() }));
+        console.log('Rating saved to local cache');
+        setFillValue(rating);
+      } catch (e) {
+        console.error('Error saving rating to local cache:', e);
+      }
     }
   };
+  
 
   return (
     <Box display="inline-flex" alignItems="center" justifyContent="center" gap={0.5}>
