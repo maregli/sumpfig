@@ -14,6 +14,8 @@ import {
   TextField,
   Button,
   Box,
+  Tooltip,
+
 } from '@mui/material';
 import TroubleshootIcon from '@mui/icons-material/Troubleshoot';
 import GroupIcon from '@mui/icons-material/Group';
@@ -50,12 +52,20 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+interface Group {
+  id: string;
+  name: string;
+  admin: string;
+  members: string[];
+  createdAt: string;
+}
+
 const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
   const theme = useTheme();
   const { user , activeGroupId , setActiveGroupId } = useAuth();
   const [groupNameInput, setGroupNameInput] = useState('');
   const [groupIdInput, setGroupIdInput] = useState('');
-  const [userGroupNames, setUserGroupNames] = useState<string[]>([]);
+  const [userGroups, setUserGroups] = useState<Group[]>([]);
   const [createdGroupId, setCreatedGroupId] = useState('');
   const [showDialog, setShowDialog] = useState(false);
 
@@ -65,10 +75,15 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
       if (user?.uid) {
         const groupIds = await getGroupsForUser(user.uid);
         const groups = await getGroupsFromIds(groupIds);
-        setUserGroupNames(groups.map(group => group.name)); // Assuming each group has a 'name' property
+        setUserGroups(groups); // Assuming each group has a 'name' property
         console.log('Fetched groups:', groupIds);
 
         // setUserGroups(groups);
+      } else {
+        // Demo mode
+        const demoGroupIds = ['demo-group-1', 'demo-group-2'];
+        const demoGroups = await getGroupsFromIds(demoGroupIds);
+        setUserGroups(demoGroups);
       }
     };
 
@@ -76,10 +91,10 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
   }, [user]);
 
   const handleGroupClick = (groupId: string) => {
-    if (user) {
+    
       setActiveGroupId(groupId);
       console.log(`Group ID selected: ${groupId}`);
-    }
+    
   }
   const handleCreateGroup = async () => {
     if (!user || !groupNameInput.trim()) return;
@@ -98,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
       // 4. Refresh user's group names
       const updatedGroups = await getGroupsForUser(user.uid);
       const groups = await getGroupsFromIds(updatedGroups);
-      setUserGroupNames(groups.map(group => group.name));
+      setUserGroups(groups);
     } catch (error) {
       console.error(error);
       alert('Failed to create group. See console.');
@@ -114,8 +129,7 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
       setGroupIdInput('');
       const updatedGroups = await getGroupsForUser(user.uid);
       const groups = await getGroupsFromIds(updatedGroups);
-      setUserGroupNames(groups.map(group => group.name)); // Assuming each group has a 'name' property
-      setUserGroupNames(updatedGroups);
+      setUserGroups(groups); // Assuming each group has a 'name' property
     } catch (error) {
       console.error(error);
       alert('Failed to add group. See console.');
@@ -148,12 +162,12 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
       <Divider />
 
       <List>
-        {userGroupNames.length > 0 ? (
-          userGroupNames.map((groupId) => (
-            <ListItem key={groupId} disablePadding>
+        {userGroups.length > 0 ? (
+          userGroups.map((group) => (
+            <ListItem key={group.id} disablePadding>
                       <ListItemButton
-          onClick={() => handleGroupClick(groupId)}
-          selected={groupId === activeGroupId}
+          onClick={() => handleGroupClick(group.id)}
+          selected={group.id === activeGroupId}
           sx={{
             '&.Mui-selected': {
               backgroundColor: '#f0f0f0',
@@ -166,7 +180,7 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
           <ListItemIcon>
             <GroupIcon />
           </ListItemIcon>
-          <ListItemText primary={groupId} />
+          <ListItemText primary={group.name} />
         </ListItemButton>
             </ListItem>
           ))
@@ -204,33 +218,22 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
           size="small"
           sx={{ mb: 1 }}
         />
-        <Button
-          variant="contained"
-          fullWidth
-          onClick={handleCreateGroup}
-          disabled={!user || !groupNameInput.trim()}
+        <Tooltip
+          title={!user ? "You must be logged in to create a group" : "Enter a group name to enable"}
+          placement="top"
         >
-          Create
-        </Button>
-        <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
-          Add User to Group
-        </Typography>
-        <TextField
-          label="Group ID"
-          value={groupIdInput}
-          onChange={(e) => setGroupIdInput(e.target.value)}
-          fullWidth
-          size="small"
-          sx={{ mb: 1 }}
-        />
-        <Button
-          variant="contained"
-          fullWidth
-          onClick={handleAddGroupToUser}
-          disabled={!user || !groupIdInput.trim()}
-        >
-          Add User
-        </Button>
+          <span>
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={handleCreateGroup}
+              disabled={!user || !groupNameInput.trim()}
+            >
+              Create
+            </Button>
+          </span>
+        </Tooltip>
+
         <Dialog open={showDialog} onClose={() => setShowDialog(false)}>
           <DialogTitle>Group Created</DialogTitle>
           <DialogContent>
@@ -248,7 +251,32 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
             <Button onClick={() => setShowDialog(false)}>Close</Button>
           </DialogActions>
         </Dialog>
-
+        <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+          Add User to Group
+        </Typography>
+        <TextField
+          label="Group ID"
+          value={groupIdInput}
+          onChange={(e) => setGroupIdInput(e.target.value)}
+          fullWidth
+          size="small"
+          sx={{ mb: 1 }}
+        />
+        <Tooltip
+          title={!user ? "You must be logged in to be added to a group" : "Enter a group id to enable"}
+          placement="top"
+        >
+          <span>
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={handleAddGroupToUser}
+              disabled={!user || !groupNameInput.trim()}
+            >
+              Add
+            </Button>
+          </span>
+        </Tooltip>
       </Box>
     </Drawer>
   );
