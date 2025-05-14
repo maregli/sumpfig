@@ -22,11 +22,15 @@ import { Button, TableFooter } from '@mui/material';
 import LinkIcon from '@mui/icons-material/Link';
 
 import AddSet from './AddSet';
-import { subscribeToTracks , subscribeToAverageRating , subscribeToTracksByGroupId } from 'firebaseServices/firestore';
+import {
+  // subscribeToTracks,
+  subscribeToAverageRating, subscribeToTracksByGroupId
+} from 'firebaseServices/firestore';
 // import { useAuth } from 'components/AuthProvider';
 import ErrorDialog from './ErrorDialog';
 import SmallSidebar from './SidebarTrack';
 import { SIDEBAR_WIDTH } from 'utils/constants';
+import { useAuth } from './AuthProvider';
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) : (0 | 1 | -1) {
   if (b[orderBy] < a[orderBy]) {
@@ -199,6 +203,7 @@ export default function SongsTable() {
   const [addTrackOpen, setAddTrackOpen] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const { activeGroupId } = useAuth();
 
   // // const { user } = useAuth();
   // useEffect(() => {
@@ -208,10 +213,10 @@ export default function SongsTable() {
   // }, []); // Empty dependency array ensures this runs only once on mount
     // const { user } = useAuth();
   useEffect(() => {
-      const unsubscribe = subscribeToTracksByGroupId("abc", setTracks, setIsLoading, setError);
+      const unsubscribe = subscribeToTracksByGroupId(activeGroupId || "", setTracks, setIsLoading, setError);
   
       return () => unsubscribe();
-    }, []); // Empty dependency array ensures this runs only once on mount
+    }, [activeGroupId]); // Empty dependency array ensures this runs only once on mount
   
   useEffect(() => {
     if (!tracks) return;

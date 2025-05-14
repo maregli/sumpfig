@@ -6,6 +6,7 @@ import {
   getDocs,
   QuerySnapshot,
   DocumentData,
+  arrayUnion,
   onSnapshot,
   doc,
   deleteDoc,
@@ -384,4 +385,28 @@ export const getComments = async (trackId: string): Promise<TrackComment[]> => {
     console.error('Error getting comments:', error);
     return [];
   }
+};
+
+export const addGroupToUser = async (userId: string, groupId: string): Promise<void> => {
+  const userRef = doc(db, 'users', userId);
+  try {
+    await updateDoc(userRef, {
+      groups: arrayUnion(groupId),
+    });
+  } catch (error) {
+    console.error('Failed to add group to user:', error);
+    throw error;
+  }
+};
+
+export const getGroupsForUser = async (userId: string): Promise<string[]> => {
+  const userRef = doc(db, 'users', userId);
+  const userSnap = await getDoc(userRef);
+
+  if (userSnap.exists()) {
+    const data = userSnap.data();
+    return data.groups || [];
+  }
+
+  return [];
 };

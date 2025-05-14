@@ -18,6 +18,11 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import InboxIcon from '@mui/icons-material/MoveToInbox';
 import MailIcon from '@mui/icons-material/Mail';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+
+import { useAuth } from './AuthProvider';
+import { addGroupToUser } from 'firebaseServices/firestore';
 
 const drawerWidth = 240;
 
@@ -83,6 +88,19 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 export default function PersistentDrawerLeft() {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
+  const { user } = useAuth();
+  const [groupIdInput, setGroupIdInput] = React.useState('');
+
+  const handleAddGroup = async () => {
+    if (!user || !groupIdInput.trim()) return;
+    try {
+      await addGroupToUser(user.uid, groupIdInput.trim());
+      setGroupIdInput('');
+      alert('Group added successfully!');
+    } catch (error) {
+      alert('Failed to add group. Check console for details.');
+    }
+  };
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -148,6 +166,28 @@ export default function PersistentDrawerLeft() {
           ))}
         </List>
         <Divider />
+        <Box sx={{ p: 2 }}>
+  <Typography variant="subtitle1">Add Group</Typography>
+  <TextField
+    label="Group ID"
+    variant="outlined"
+    fullWidth
+    value={groupIdInput}
+    onChange={(e) => setGroupIdInput(e.target.value)}
+    size="small"
+    sx={{ my: 1 }}
+  />
+  <Button
+    variant="contained"
+    color="primary"
+    fullWidth
+    onClick={handleAddGroup}
+    disabled={!user}
+  >
+    Add to User
+  </Button>
+</Box>
+
         <List>
           {['All mail', 'Trash', 'Spam'].map((text, index) => (
             <ListItem key={text} disablePadding>
