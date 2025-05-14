@@ -19,7 +19,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { useAuth } from './AuthProvider';
 import { SIDEBAR_WIDTH } from 'utils/constants';
-import { deleteTracks, getTracksFromIds , postComment, getComments, getDisplayNameFromUserId, getTrackFromId} from 'firebaseServices/firestore';
+import { deleteTracks, getTracksFromIds, postComment, getComments, getDisplayNameFromUserId, getTrackFromId } from 'firebaseServices/firestore';
+import StarRating from './StarRating';
 import { formatDistanceToNow } from 'date-fns';
 
 
@@ -169,6 +170,9 @@ export default function SmallSidebar({
         <Typography variant="h6" gutterBottom>
           {trackTitle}
         </Typography>
+        <Box sx={{backgroundColor: "#f0f0f0", padding: 1, borderRadius: 1, mb: 2}} alignContent={"center"}>
+          <StarRating id={trackId}/>
+        </Box>
 
         {/* New Comment Input */}
         <TextField

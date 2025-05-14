@@ -22,10 +22,9 @@ import { Button, TableFooter } from '@mui/material';
 import LinkIcon from '@mui/icons-material/Link';
 
 import AddSet from './AddSet';
-import { subscribeToTracks } from 'firebaseServices/firestore';
+import { subscribeToTracks , subscribeToAverageRating } from 'firebaseServices/firestore';
 // import { useAuth } from 'components/AuthProvider';
 import ErrorDialog from './ErrorDialog';
-import StarRating from './StarRating';
 import SmallSidebar from './SidebarTrack';
 import { SIDEBAR_WIDTH } from 'utils/constants';
 
@@ -80,11 +79,11 @@ const headCells: readonly HeadCell[] = [
     label: 'Publish Date',
   },
   {
-    id: 'rating' as keyof Track,
-    numeric: false,
+    id: 'rating',
+    numeric: true,
     disablePadding: false,
     label: 'Rating',
-  },  
+  },
   {
     id: 'genre',
     numeric: false,
@@ -189,6 +188,7 @@ function EnhancedTableToolbar() {
 export default function SongsTable() {
   const [openSidebar, setOpenSidebar] = useState(false);
   const [tracks, setTracks] = useState<Track[] | []>([]);
+  const [averageRatings, setAverageRatings] = useState<Record<string, number | null>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [_error, setError] = useState<Error | null>(null);
   const [order, setOrder] = useState<Order>('asc');
@@ -206,6 +206,23 @@ export default function SongsTable() {
 
     return () => unsubscribe();
   }, []); // Empty dependency array ensures this runs only once on mount
+  
+  useEffect(() => {
+    if (!tracks) return;
+  
+    const unsubscribers: (() => void)[] = [];
+  
+    tracks.forEach((track) => {
+      const unsubscribe = subscribeToAverageRating(track.id, (trackId, avg) => {
+        setAverageRatings(prev => ({ ...prev, [trackId]: avg }));
+      });
+      unsubscribers.push(unsubscribe);
+    });
+  
+    return () => {
+      unsubscribers.forEach(unsub => unsub());
+    };
+  }, [tracks]);
 
   const handleAddTrackOpen = () => {
     setAddTrackOpen(true);
@@ -292,8 +309,21 @@ export default function SongsTable() {
             </TableCell>
             <TableCell>{track.artist}</TableCell>
             <TableCell>{track.publish_date}</TableCell>
-            <TableCell>
-              <StarRating id={track.id} />
+            <TableCell align="right">
+              {averageRatings[track.id] != null ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <span key={i} style={{ color: 'black', fontSize: '14px' }}>
+                      {i < Math.round(averageRatings[track.id]!) ? '★' : '☆'}
+                    </span>
+                  ))}
+                  <Typography variant="body2" sx={{ ml: 1 }}>
+                    {averageRatings[track.id]!.toFixed(1)}
+                  </Typography>
+                </Box>
+              ) : (
+                'No ratings'
+              )}
             </TableCell>
             <TableCell>{track.genre}</TableCell>
             <TableCell align="right">{track.likes}</TableCell>

@@ -224,6 +224,76 @@ export const submitRating = async (trackId: string, userId: string, rating: numb
   }
 };
 
+export const getRating = async (trackId: string, userId: string): Promise<number | null> => {
+  try {
+    // Reference to the track's ratings subcollection
+    const trackDocRef = doc(db, 'tracks', trackId);
+    const ratingsCollectionRef = collection(trackDocRef, 'ratings');
+
+    // Get the user's rating document
+    const userRatingDocRef = doc(ratingsCollectionRef, userId);
+    const userRatingDoc = await getDoc(userRatingDocRef);
+
+    if (userRatingDoc.exists()) {
+      const data = userRatingDoc.data();
+      return data.rating as number; // Return the rating value
+    } else {
+      console.log(`No rating found for track ${trackId} by user ${userId}`);
+      return null;
+    }
+  }
+  catch (error) {
+    console.error('Error getting rating:', error);
+    return null;
+  }
+}
+
+export const getAverageRating = async (trackId: string): Promise<number | null> => {
+  try {
+    // Reference to the track's ratings subcollection
+    const trackDocRef = doc(db, 'tracks', trackId);
+    const ratingsCollectionRef = collection(trackDocRef, 'ratings');
+
+    // Get all ratings for the track
+    const querySnapshot: QuerySnapshot<DocumentData> = await getDocs(ratingsCollectionRef);
+    const ratings: number[] = querySnapshot.docs.map((doc) => doc.data().rating as number);
+
+    if (ratings.length === 0) {
+      console.log(`No ratings found for track ${trackId}`);
+      return null;
+    }
+
+    // Calculate the average rating
+    const totalRating = ratings.reduce((acc, rating) => acc + rating, 0);
+    return totalRating / ratings.length;
+  }
+  catch (error) {
+    console.error('Error getting average rating:', error);
+    return null;
+  }
+}
+
+export const subscribeToAverageRating = (
+  trackId: string,
+  onAverageChange: (trackId: string, avg: number | null) => void
+): (() => void) => {
+  const ratingsRef = collection(doc(db, 'tracks', trackId), 'ratings');
+
+  const unsubscribe = onSnapshot(ratingsRef, (snapshot) => {
+    const ratings: number[] = snapshot.docs.map(doc => doc.data().rating as number);
+
+    if (ratings.length === 0) {
+      onAverageChange(trackId, null);
+    } else {
+      const avg = ratings.reduce((acc, val) => acc + val, 0) / ratings.length;
+      onAverageChange(trackId, avg);
+    }
+  });
+
+  return unsubscribe;
+};
+
+
 export const postComment = async (trackId: string, userId: string, comment: string): Promise<void> => {
   try {
     // Reference to the track's comments subcollection

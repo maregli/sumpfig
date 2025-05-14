@@ -1,4 +1,3 @@
-// components/StarRating.tsx
 import React, { useState } from 'react';
 import { Box, IconButton } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
@@ -13,14 +12,15 @@ interface StarRatingProps {
 
 const StarRating: React.FC<StarRatingProps> = ({ id = '' }) => {
   const { user } = useAuth();
-  const [hoverValue, setHoverValue] = useState<number | null>(null);
+  const [fillValue, setFillValue] = useState<number>(0); // Defaults to 0 if not rated yet
 
-  const handleClick = (id: string, rating: number) => {
+  const handleClick = (trackId: string, rating: number) => {
     const userId = user?.uid;
     if (userId) {
-      submitRating(id, userId, rating)
+      submitRating(trackId, userId, rating)
         .then(() => {
           console.log('Rating submitted successfully');
+          setFillValue(rating);
         })
         .catch((error) => {
           console.error('Error submitting rating:', error);
@@ -34,11 +34,9 @@ const StarRating: React.FC<StarRatingProps> = ({ id = '' }) => {
         <IconButton
           key={index}
           onClick={() => handleClick(id, index)}
-          onMouseEnter={() => setHoverValue(index)}
-          onMouseLeave={() => setHoverValue(null)}
           size="small"
         >
-          {(hoverValue ?? 0) >= index ? (
+          {index <= fillValue ? (
             <StarIcon sx={{ color: '#FFD700' }} />
           ) : (
             <StarBorderIcon sx={{ color: '#FFD700' }} />
