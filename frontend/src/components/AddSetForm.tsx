@@ -26,15 +26,17 @@ const emptyTrack: TrackNoId = {
   artwork_url: '',
   added_by_name: '', // This should be set to the current user's ID when adding a track
   added_by_id: '', // This should be set to the current user's ID when adding a track
+  group_id: '',
 };
 
 const AddTrackForm = (props: { handleClickClose: () => void }) => {
-  const { user } = useAuth();
+  const { user , activeGroupId } = useAuth();
   const { handleClickClose } = props;
   const [track, setTrack] = useState<TrackNoId>({
     ...emptyTrack,
     added_by_name: user ? user.displayName : 'Anonymous', // Set the added_by field to the current user's ID
     added_by_id: user ? user.uid : 'Anonymous', // Set the added_by field to the current user's ID
+    group_id: activeGroupId ? activeGroupId : '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

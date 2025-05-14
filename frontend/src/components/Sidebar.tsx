@@ -20,9 +20,19 @@ import GroupIcon from '@mui/icons-material/Group';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { styled } from '@mui/material/styles';
+import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 import { useAuth } from './AuthProvider';
-import { addGroupToUser, getGroupsForUser } from 'firebaseServices/firestore';
+import {
+  addGroupToUser,
+  addUserToGroup,
+  getGroupsForUser,
+  createGroup,
+  getGroupsFromIds,
+} from 'firebaseServices/firestore';
+// import { set } from 'date-fns';
+// import { add } from 'date-fns';
 
 const drawerWidth = 240;
 
@@ -42,16 +52,23 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
   const theme = useTheme();
-  const { user , setActiveGroupId } = useAuth();
+  const { user , activeGroupId , setActiveGroupId } = useAuth();
+  const [groupNameInput, setGroupNameInput] = useState('');
   const [groupIdInput, setGroupIdInput] = useState('');
-  const [userGroups, setUserGroups] = useState<string[]>([]);
+  const [userGroupNames, setUserGroupNames] = useState<string[]>([]);
+  const [createdGroupId, setCreatedGroupId] = useState('');
+  const [showDialog, setShowDialog] = useState(false);
 
   // Fetch groups on mount or when user changes
   useEffect(() => {
     const fetchGroups = async () => {
       if (user?.uid) {
-        const groups = await getGroupsForUser(user.uid);
-        setUserGroups(groups);
+        const groupIds = await getGroupsForUser(user.uid);
+        const groups = await getGroupsFromIds(groupIds);
+        setUserGroupNames(groups.map(group => group.name)); // Assuming each group has a 'name' property
+        console.log('Fetched groups:', groupIds);
+
+        // setUserGroups(groups);
       }
     };
 
@@ -62,17 +79,43 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
     if (user) {
       setActiveGroupId(groupId);
       console.log(`Group ID selected: ${groupId}`);
-      onClose();
     }
   }
-
-  const handleAddGroup = async () => {
-    if (!user || !groupIdInput.trim()) return;
+  const handleCreateGroup = async () => {
+    if (!user || !groupNameInput.trim()) return;
     try {
+      // 1. Create the group and get the ID
+      const groupId = await createGroup(groupNameInput.trim(), user.uid);
+  
+      // 2. Add group ID to user's group list
+      await addGroupToUser(user.uid, groupId);
+  
+      // 3. Clear input and show dialog
+      setGroupNameInput('');
+      setCreatedGroupId(groupId);
+      setShowDialog(true);
+  
+      // 4. Refresh user's group names
+      const updatedGroups = await getGroupsForUser(user.uid);
+      const groups = await getGroupsFromIds(updatedGroups);
+      setUserGroupNames(groups.map(group => group.name));
+    } catch (error) {
+      console.error(error);
+      alert('Failed to create group. See console.');
+    }
+  };
+  
+  const handleAddGroupToUser = async () => {
+    if (!user || !groupNameInput.trim()) return;
+    try {
+      // Create a new group in Firestore
       await addGroupToUser(user.uid, groupIdInput.trim());
+      await addUserToGroup(groupIdInput.trim(), user.uid);
       setGroupIdInput('');
       const updatedGroups = await getGroupsForUser(user.uid);
-      setUserGroups(updatedGroups);
+      const groups = await getGroupsFromIds(updatedGroups);
+      setUserGroupNames(groups.map(group => group.name)); // Assuming each group has a 'name' property
+      setUserGroupNames(updatedGroups);
     } catch (error) {
       console.error(error);
       alert('Failed to add group. See console.');
@@ -105,15 +148,26 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
       <Divider />
 
       <List>
-        {userGroups.length > 0 ? (
-          userGroups.map((groupId) => (
+        {userGroupNames.length > 0 ? (
+          userGroupNames.map((groupId) => (
             <ListItem key={groupId} disablePadding>
-              <ListItemButton onClick={() => handleGroupClick(groupId)}>
-                <ListItemIcon>
-                  <GroupIcon />
-                </ListItemIcon>
-                <ListItemText primary={groupId} />
-              </ListItemButton>
+                      <ListItemButton
+          onClick={() => handleGroupClick(groupId)}
+          selected={groupId === activeGroupId}
+          sx={{
+            '&.Mui-selected': {
+              backgroundColor: '#f0f0f0',
+              '&:hover': {
+                backgroundColor: '#e0e0e0',
+              },
+            },
+          }}
+        >
+          <ListItemIcon>
+            <GroupIcon />
+          </ListItemIcon>
+          <ListItemText primary={groupId} />
+        </ListItemButton>
             </ListItem>
           ))
         ) : (
@@ -140,7 +194,26 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
 
       <Box sx={{ p: 2 }}>
         <Typography variant="subtitle1" gutterBottom>
-          Add Group ID
+          Create Group
+        </Typography>
+        <TextField
+          label="Group Name"
+          value={groupNameInput}
+          onChange={(e) => setGroupNameInput(e.target.value)}
+          fullWidth
+          size="small"
+          sx={{ mb: 1 }}
+        />
+        <Button
+          variant="contained"
+          fullWidth
+          onClick={handleCreateGroup}
+          disabled={!user || !groupNameInput.trim()}
+        >
+          Create
+        </Button>
+        <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+          Add User to Group
         </Typography>
         <TextField
           label="Group ID"
@@ -153,11 +226,29 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
         <Button
           variant="contained"
           fullWidth
-          onClick={handleAddGroup}
+          onClick={handleAddGroupToUser}
           disabled={!user || !groupIdInput.trim()}
         >
-          Add to User
+          Add User
         </Button>
+        <Dialog open={showDialog} onClose={() => setShowDialog(false)}>
+          <DialogTitle>Group Created</DialogTitle>
+          <DialogContent>
+            <Typography gutterBottom>
+             This is the only time this Group ID will be shown. Please copy and share it now if you want others to join.
+            </Typography>
+            <Box display="flex" alignItems="center" gap={1}>
+              <TextField value={createdGroupId} fullWidth disabled />
+              <IconButton onClick={() => navigator.clipboard.writeText(createdGroupId)}>
+                <ContentCopyIcon />
+              </IconButton>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowDialog(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+
       </Box>
     </Drawer>
   );

@@ -22,4 +22,5 @@ export interface Track {
   tags: string[] | null;
   added_by_name: string | null; // This should be set to the current user's ID when adding a track
   added_by_id: string;
+  group_id: string;
 }
