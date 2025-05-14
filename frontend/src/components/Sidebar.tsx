@@ -33,8 +33,6 @@ import {
   createGroup,
   getGroupsFromIds,
 } from 'firebaseServices/firestore';
-// import { set } from 'date-fns';
-// import { add } from 'date-fns';
 
 const drawerWidth = 240;
 
@@ -76,7 +74,7 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
         const groupIds = await getGroupsForUser(user.uid);
         const groups = await getGroupsFromIds(groupIds);
         setUserGroups(groups); // Assuming each group has a 'name' property
-        console.log('Fetched groups:', groupIds);
+        setActiveGroupId(groups[0]?.id || ''); // Set the first group as active by default
 
         // setUserGroups(groups);
       } else {
@@ -84,6 +82,7 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
         const demoGroupIds = ['demo-group-1', 'demo-group-2'];
         const demoGroups = await getGroupsFromIds(demoGroupIds);
         setUserGroups(demoGroups);
+        setActiveGroupId(demoGroups[0]?.id || ''); // Set the first group as active by default
       }
     };
 
