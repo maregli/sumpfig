@@ -22,11 +22,15 @@ import { Button, TableFooter } from '@mui/material';
 import LinkIcon from '@mui/icons-material/Link';
 
 import AddSet from './AddSet';
-import { subscribeToTracks , subscribeToAverageRating } from 'firebaseServices/firestore';
+import {
+  // subscribeToTracks,
+  subscribeToAverageRating, subscribeToTracksByGroupId
+} from 'firebaseServices/firestore';
 // import { useAuth } from 'components/AuthProvider';
 import ErrorDialog from './ErrorDialog';
 import SmallSidebar from './SidebarTrack';
 import { SIDEBAR_WIDTH } from 'utils/constants';
+import { useAuth } from './AuthProvider';
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) : (0 | 1 | -1) {
   if (b[orderBy] < a[orderBy]) {
@@ -199,13 +203,20 @@ export default function SongsTable() {
   const [addTrackOpen, setAddTrackOpen] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const { activeGroupId } = useAuth();
 
-  // const { user } = useAuth();
+  // // const { user } = useAuth();
+  // useEffect(() => {
+  //   const unsubscribe = subscribeToTracks(setTracks, setIsLoading, setError);
+
+  //   return () => unsubscribe();
+  // }, []); // Empty dependency array ensures this runs only once on mount
+    // const { user } = useAuth();
   useEffect(() => {
-    const unsubscribe = subscribeToTracks(setTracks, setIsLoading, setError);
-
-    return () => unsubscribe();
-  }, []); // Empty dependency array ensures this runs only once on mount
+      const unsubscribe = subscribeToTracksByGroupId(activeGroupId || "", setTracks, setIsLoading, setError);
+  
+      return () => unsubscribe();
+    }, [activeGroupId]); // Empty dependency array ensures this runs only once on mount
   
   useEffect(() => {
     if (!tracks) return;
@@ -277,8 +288,9 @@ export default function SongsTable() {
         width: openSidebar ? `calc(100% - 300px)` : '100%',
         marginRight: openSidebar ? {SIDEBAR_WIDTH} : '0px',
       }}>
-        <EnhancedTableToolbar />
+        
         <TableContainer>
+        <EnhancedTableToolbar />
           <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
             <EnhancedTableHead
               order={order}
@@ -365,9 +377,10 @@ export default function SongsTable() {
 </TableBody>
 
           </Table>
-          <TableFooter>
+        </TableContainer>
+        <TableFooter>
             <TableRow>
-              <TableCell colSpan={6} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <TableCell colSpan={headCells.length}  sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Button
                   variant="contained"
                   color="primary"
@@ -390,7 +403,6 @@ export default function SongsTable() {
               </TableCell>
             </TableRow>
           </TableFooter>
-        </TableContainer>
       </Paper>
       <AddSet open={addTrackOpen} handleClickClose={handleAddTrackClose} />
       <ErrorDialog

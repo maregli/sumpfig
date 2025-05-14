@@ -1,6 +1,22 @@
 // src/firebase/firestore.ts
 
-import { collection, addDoc, getDocs, QuerySnapshot, DocumentData, onSnapshot, doc, deleteDoc, getDoc , setDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import {
+  collection,
+  addDoc,
+  getDocs,
+  QuerySnapshot,
+  DocumentData,
+  arrayUnion,
+  onSnapshot,
+  doc,
+  deleteDoc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  Timestamp, 
+  query,
+  where
+} from 'firebase/firestore';
 
 import { db } from 'firebaseServices/firebaseConfig';
 
@@ -104,6 +120,40 @@ export const subscribeToTracks = (
 
   return () => unsubscribe();
 };
+
+
+// Function to get tracks filtered by group_id with real-time updates
+export const subscribeToTracksByGroupId = (
+  groupId: string,
+  setTracks: (tracks: Track[]) => void,
+  setIsLoading: (loading: boolean) => void,
+  setError: (error: Error | null) => void
+): () => void => {
+  setIsLoading(true);
+  setError(null);
+
+  const filteredQuery = query(tracksCollectionRef, where('group_id', '==', groupId));
+
+  const unsubscribe = onSnapshot(
+    filteredQuery,
+    (snapshot) => {
+      const tracks: Track[] = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Track, 'id'>),
+      }));
+      setTracks(tracks);
+      setIsLoading(false);
+    },
+    (error) => {
+      console.error("Error getting filtered tracks:", error);
+      setError(error);
+      setIsLoading(false);
+    }
+  );
+
+  return () => unsubscribe();
+};
+
 
 export const deleteTracks = async (trackIds: readonly string[]): Promise<void> => {
   try {
@@ -336,3 +386,99 @@ export const getComments = async (trackId: string): Promise<TrackComment[]> => {
     return [];
   }
 };
+
+export const addGroupToUser = async (userId: string, groupId: string): Promise<void> => {
+  const userRef = doc(db, 'users', userId);
+  try {
+    await updateDoc(userRef, {
+      groups: arrayUnion(groupId),
+    });
+  } catch (error) {
+    console.error('Failed to add group to user:', error);
+    throw error;
+  }
+};
+
+export const addUserToGroup = async (groupId: string, userId: string): Promise<void> => {
+  const groupRef = doc(db, 'groups', groupId);
+  try {
+    await updateDoc(groupRef, {
+      members: arrayUnion(userId),
+    });
+  } catch (error) {
+    console.error('Failed to add user to group:', error);
+    throw error;
+  }
+}
+
+export const getGroupsForUser = async (userId: string): Promise<string[]> => {
+  const userRef = doc(db, 'users', userId);
+  const userSnap = await getDoc(userRef);
+
+  if (userSnap.exists()) {
+    const data = userSnap.data();
+    return data.groups || [];
+  }
+
+  return [];
+};
+
+// Function to create a new group and add the user as a member
+export const createGroup = async (groupName: string, userId: string): Promise<string> => {
+  try {
+    // Step 1: Create a new group in the 'groups' collection
+    const groupData = {
+      name: groupName,
+      admin: userId, // The user who created the group is the admin
+      members: [userId], // Add the user as the first member
+      createdAt: new Date(),
+    };
+
+    const groupRef = await addDoc(collection(db, 'groups'), groupData); // Adding group to Firestore
+    console.log('Group created with ID:', groupRef.id);
+
+    // Step 2: Add the group ID to the user's 'groups' array in their document
+    const userRef = doc(db, 'users', userId); // Reference to the user's document
+    await updateDoc(userRef, {
+      groups: arrayUnion(groupRef.id), // Add the new group ID to the user's groups array
+    });
+
+    console.log('Group added to user successfully!');
+    return groupRef.id; // Return the group ID after creating the group
+  } catch (e) {
+    console.error('Error creating group or adding user:', e);
+    throw e; // Re-throw the error so the calling function can handle it
+  }
+};
+
+export const getGroupFromId = async (groupId: string): Promise<any> => {
+  try {
+    const groupDocRef = doc(db, 'groups', groupId); // Reference to the specific document
+    const groupDoc = await getDoc(groupDocRef); // Use getDoc to fetch a single document
+    if (groupDoc.exists()) {
+      const data = groupDoc.data();
+      return {
+        id: groupDoc.id,
+        ...(data as Omit<any, 'id'>),
+      };
+    } else {
+      console.log('No such document!');
+      return null;
+    }
+  }
+  catch (error) {
+    console.error('Error getting group:', error);
+    return null;
+  }
+}
+
+export const getGroupsFromIds = async (groupIds: readonly string[]): Promise<any[]> => {
+  try {
+    const groupPromises = groupIds.map((id) => getGroupFromId(id));
+    const groups = await Promise.all(groupPromises);
+    return groups.filter((group) => group !== null); // Filter out null values
+  } catch (error) {
+    console.error('Error getting groups:', error);
+    return [];
+  }
+}
