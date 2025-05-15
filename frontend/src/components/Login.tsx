@@ -69,7 +69,6 @@ const LoginButton: React.FC = () => {
     try {
       const authUser = await signInWithEmailAndPassword(auth, email, password);
       const dbUser = await getUserFromId(authUser.user.uid);
-      console.log('Email User found in Firestore:', dbUser);
       setUser(dbUser);
       setOpen(false);
     } catch (error) {
@@ -109,7 +108,6 @@ const LoginButton: React.FC = () => {
         role: 'user', // Default role, you can change this based on your logic
       };
       await addUser(newUser);
-      console.log('New EMail user created:', newUser);
       setUser(newUser);
       setOpen(false);
     } catch (error) {if (typeof error === 'object' && error !== null && 'code' in error) {

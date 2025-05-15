@@ -407,7 +407,10 @@ export default function SongsTable() {
       <AddSet open={addTrackOpen} handleClickClose={handleAddTrackClose} />
       <ErrorDialog
         open={showErrorDialog}
-        onClose={() => setShowErrorDialog(false)}
+        onClose={() => {
+          setShowErrorDialog(false)
+          setErrorMessage('');
+        }}
         title="Error"
         message={errorMessage}
         messageType="error"
