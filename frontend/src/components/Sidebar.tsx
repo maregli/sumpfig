@@ -120,7 +120,7 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
   };
   
   const handleAddGroupToUser = async () => {
-    if (!user || !groupNameInput.trim()) return;
+    if (!user || !groupIdInput.trim()) return;
     try {
       // Create a new group in Firestore
       await addGroupToUser(user.uid, groupIdInput.trim());
@@ -270,7 +270,7 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
               variant="contained"
               fullWidth
               onClick={handleAddGroupToUser}
-              disabled={!user || !groupNameInput.trim()}
+              disabled={!user || !groupIdInput.trim()}
             >
               Add
             </Button>
