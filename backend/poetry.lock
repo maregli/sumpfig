@@ -527,6 +527,21 @@ docs = ["ipython", "matplotlib", "numpydoc", "sphinx"]
 tests = ["pytest", "pytest-cov", "pytest-xdist"]
 
 [[package]]
+name = "dacite"
+version = "1.9.2"
+description = "Simple creation of data classes from dictionaries."
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "dacite-1.9.2-py3-none-any.whl", hash = "sha256:053f7c3f5128ca2e9aceb66892b1a3c8936d02c686e707bee96e19deef4bc4a0"},
+    {file = "dacite-1.9.2.tar.gz", hash = "sha256:6ccc3b299727c7aa17582f0021f6ae14d5de47c7227932c47fec4cdfefd26f09"},
+]
+
+[package.extras]
+dev = ["black", "coveralls", "mypy", "pre-commit", "pylint", "pytest (>=5)", "pytest-benchmark", "pytest-cov"]
+
+[[package]]
 name = "dataclass-factory"
 version = "2.16"
 description = "An utility class for creating instances of dataclasses"
@@ -1210,18 +1225,6 @@ files = [
 
 [package.dependencies]
 typing-extensions = {version = ">=4.1.0", markers = "python_version < \"3.11\""}
-
-[[package]]
-name = "mutagen"
-version = "1.47.0"
-description = "read and write audio tags for many formats"
-optional = false
-python-versions = ">=3.7"
-groups = ["main"]
-files = [
-    {file = "mutagen-1.47.0-py3-none-any.whl", hash = "sha256:edd96f50c5907a9539d8e5bba7245f62c9f520aef333d13392a79a4f70aca719"},
-    {file = "mutagen-1.47.0.tar.gz", hash = "sha256:719fadef0a978c31b4cf3c956261b3c58b6948b32023078a2117b1de09f0fc99"},
-]
 
 [[package]]
 name = "numpy"
@@ -2027,20 +2030,25 @@ files = [
 ]
 
 [[package]]
-name = "soundcloud-lib"
-version = "0.6.1"
-description = "Python Soundcloud API"
+name = "soundcloud-v2"
+version = "1.6.1"
+description = "Python wrapper for the internal v2 SoundCloud API.Does not require an API key."
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 groups = ["main"]
 files = [
-    {file = "soundcloud-lib-0.6.1.tar.gz", hash = "sha256:85169d6e7e39cd39ed3068ebf7d54a1a6fa865959203b50bd6829074be346e64"},
+    {file = "soundcloud_v2-1.6.1-py3-none-any.whl", hash = "sha256:217392f0a904f0e1984d2219ed061b9ec4ec6691bcf1a7160b1a94db3b106ada"},
+    {file = "soundcloud_v2-1.6.1.tar.gz", hash = "sha256:b6646e7883a9986a92bdfb6caded9ca65453899f90517e47ecf82d21ca0ae627"},
 ]
 
 [package.dependencies]
-aiohttp = "*"
-bs4 = "*"
-mutagen = "*"
+dacite = ">=1.8.1"
+python-dateutil = ">=2.8.2"
+requests = "*"
+
+[package.extras]
+dev = ["coveralls", "mypy", "pytest", "pytest-dotenv", "ruff", "types-python-dateutil", "types-requests"]
+docs = ["pdoc"]
 
 [[package]]
 name = "soupsieve"
@@ -2270,4 +2278,4 @@ test = ["pytest (>=8.1,<9.0)", "pytest-rerunfailures (>=14.0,<15.0)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "35d253198c3ac66a9ef1a9a52bf4cbfc6b49c309ea3e3b813a7ede479ab3f3de"
+content-hash = "84e645242ec2898929870a1570ea48bedfe82b3a8a18670a69b16d5ad54ce98a"

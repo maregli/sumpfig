@@ -1,9 +1,12 @@
 /**
  * SoundCloud API Client
- * Interfaces with the SoundCloud microservice to fetch track metadata
+ * Calls the backend API which proxies to the SoundCloud microservice
+ * 
+ * Architecture:
+ * Browser (Vercel) → Backend API (Render) → SoundCloud Service (Render Private)
  */
 
-const SOUNDCLOUD_API_URL = process.env.REACT_APP_SOUNDCLOUD_API_URL || 'http://localhost:5002';
+const BACKEND_API_URL = process.env.REACT_APP_BACKEND_API_URL || 'http://localhost:5001';
 
 export interface SoundCloudUser {
   id: number;
@@ -70,7 +73,7 @@ export interface SoundCloudSearchResult {
 class SoundCloudClient {
   private baseUrl: string;
 
-  constructor(baseUrl: string = SOUNDCLOUD_API_URL) {
+  constructor(baseUrl: string = BACKEND_API_URL) {
     this.baseUrl = baseUrl;
   }
 
@@ -79,7 +82,7 @@ class SoundCloudClient {
    */
   async getTrack(url: string): Promise<SoundCloudTrack> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/soundcloud/track`, {
+      const response = await fetch(`${this.baseUrl}/soundcloud/metadata`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -107,7 +110,7 @@ class SoundCloudClient {
    */
   async getPlaylist(url: string, loadTracks: boolean = true): Promise<SoundCloudPlaylist> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/soundcloud/playlist`, {
+      const response = await fetch(`${this.baseUrl}/soundcloud/playlist`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -135,7 +138,7 @@ class SoundCloudClient {
    */
   async searchTracks(query: string, limit: number = 20): Promise<SoundCloudSearchResult[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/soundcloud/search`, {
+      const response = await fetch(`${this.baseUrl}/soundcloud/search`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -159,11 +162,11 @@ class SoundCloudClient {
   }
 
   /**
-   * Check if the SoundCloud service is healthy
+   * Check if the backend API is healthy
    */
   async healthCheck(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/health`);
+      const response = await fetch(`${this.baseUrl}/version`);
       return response.ok;
     } catch {
       return false;
