@@ -22,12 +22,14 @@ import { db } from 'firebaseServices/firebaseConfig';
 
 import { Track } from 'types/track';
 import { UserRole } from 'types/users';
+import { Activity } from 'types/activity';
 
 import { validateUser } from 'utils/validators/userValidators';
 
 // Reference to the 'tracks' collection in Firestore
 const tracksCollectionRef = collection(db, 'tracks');
 const usersCollectionRef = collection(db, 'users'); // Reference to the 'users' collection
+const activitiesCollectionRef = collection(db, 'activities');
 
 // Function to add a track
 export const addTrack = async (trackData: Omit<Track, 'id'>): Promise<void> => {
@@ -170,6 +172,81 @@ export const deleteTracks = async (trackIds: readonly string[]): Promise<void> =
     console.error('Error deleting tracks:', error);
     throw error; // Re-throw the error to be handled by the component
   }
+};
+
+export const updateTrackTags = async (trackIds: readonly string[], newTags: string[]): Promise<void> => {
+  try {
+    await Promise.all(
+      trackIds.map(async (trackId) => {
+        const trackDocRef = doc(db, 'tracks', trackId);
+        const trackDoc = await getDoc(trackDocRef);
+        
+        if (trackDoc.exists()) {
+          const existingTags = trackDoc.data().tags || [];
+          const updatedTags = [...new Set([...existingTags, ...newTags])]; // Merge and deduplicate
+          
+          await updateDoc(trackDocRef, {
+            tags: updatedTags,
+          });
+          console.log(`Updated tags for track ${trackId}`);
+        }
+      })
+    );
+    console.log('All selected tracks updated successfully.');
+  } catch (error) {
+    console.error('Error updating track tags:', error);
+    throw error;
+  }
+};
+
+// Activity Feed Functions
+export const addActivity = async (activityData: Omit<Activity, 'id' | 'timestamp'>): Promise<void> => {
+  try {
+    await addDoc(activitiesCollectionRef, {
+      ...activityData,
+      timestamp: Timestamp.now(),
+    });
+    console.log('Activity logged successfully');
+  } catch (error) {
+    console.error('Error logging activity:', error);
+  }
+};
+
+export const subscribeToGroupActivities = (
+  groupId: string,
+  setActivities: (activities: Activity[]) => void,
+  limit: number = 20
+): (() => void) => {
+  const activitiesQuery = query(
+    activitiesCollectionRef,
+    where('groupId', '==', groupId),
+    // orderBy('timestamp', 'desc'),
+    // limit(limit)
+  );
+
+  const unsubscribe = onSnapshot(
+    activitiesQuery,
+    (snapshot) => {
+      const activities: Activity[] = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          timestamp: data.timestamp?.toDate() || new Date(),
+        } as Activity;
+      });
+      
+      // Sort by timestamp descending
+      activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+      
+      setActivities(activities.slice(0, limit));
+    },
+    (error) => {
+      console.error('Error getting activities:', error);
+    }
+  );
+
+  return unsubscribe;
 };
 
 export const addUser = async (userData: UserRole): Promise<void> => {

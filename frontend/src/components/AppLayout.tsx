@@ -4,6 +4,7 @@ import { Box, CssBaseline, Toolbar } from '@mui/material';
 import Sidebar from './Sidebar';
 import AppTopBar from './AppTopBar';
 import SongsTable from './SetsTable';
+import ActivityFeed from './ActivityFeed';
 import { useAuth } from './AuthProvider';
 
 const drawerWidth = 240;
@@ -39,6 +40,9 @@ const AppLayout: React.FC = () => {
         {/* Additional spacer for demo banner when not logged in */}
         {!user && <Box sx={{ height: 48 }} />}
         <SongsTable />
+        <Box sx={{ mt: 3 }}>
+          <ActivityFeed />
+        </Box>
       </Main>
     </Box>
   );

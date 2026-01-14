@@ -13,13 +13,14 @@ import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import TableSortLabel from '@mui/material/TableSortLabel';
-import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import Tooltip from '@mui/material/Tooltip';
 import { visuallyHidden } from '@mui/utils';
-import { Button, TableFooter } from '@mui/material';
+import { Button, TableFooter, IconButton, Checkbox } from '@mui/material';
 import LinkIcon from '@mui/icons-material/Link';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
 
 import AddSet from './AddSet';
 import {
@@ -28,9 +29,11 @@ import {
 } from 'firebaseServices/firestore';
 // import { useAuth } from 'components/AuthProvider';
 import ErrorDialog from './ErrorDialog';
-import SmallSidebar from './SidebarTrack';
-import { SIDEBAR_WIDTH } from 'utils/constants';
+import TrackDetailRow from './TrackDetailRow';
+import TrackFilters from './TrackFilters';
 import { useAuth } from './AuthProvider';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) : (0 | 1 | -1) {
   if (b[orderBy] < a[orderBy]) {
@@ -77,46 +80,10 @@ const headCells: readonly HeadCell[] = [
     label: 'Artist',
   },
   {
-    id: 'publish_date',
-    numeric: false,
-    disablePadding: false,
-    label: 'Publish Date',
-  },
-  {
     id: 'rating',
     numeric: true,
     disablePadding: false,
     label: 'Rating',
-  },
-  {
-    id: 'genre',
-    numeric: false,
-    disablePadding: false,
-    label: 'Genre',
-  },
-  {
-    id: 'likes',
-    numeric: true,
-    disablePadding: false,
-    label: 'Likes',
-  },
-  {
-    id: 'playbacks',
-    numeric: true,
-    disablePadding: false,
-    label: 'Playbacks',
-  },
-  {
-    id: 'permalink',
-    numeric: false,
-    disablePadding: false,
-    label: 'Link',
-  },
-  {
-    id: 'tags',
-    numeric: false,
-    disablePadding: false,
-    label: 'Tags',
   },
   {
     id: 'added_by_name',
@@ -124,17 +91,20 @@ const headCells: readonly HeadCell[] = [
     disablePadding: false,
     label: 'Added By',
   }
-
 ];
 
 interface EnhancedTableProps {
   onRequestSort: (event: React.MouseEvent<unknown>, property: keyof Track) => void;
   order: Order;
   orderBy: string;
+  editMode: boolean;
+  numSelected: number;
+  rowCount: number;
+  onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 function EnhancedTableHead(props: EnhancedTableProps) {
-  const { order, orderBy, onRequestSort } = props;
+  const { order, orderBy, onRequestSort, editMode, numSelected, rowCount, onSelectAllClick } = props;
   const createSortHandler = (property: keyof Track) => (event: React.MouseEvent<unknown>) => {
     onRequestSort(event, property);
   };
@@ -142,7 +112,22 @@ function EnhancedTableHead(props: EnhancedTableProps) {
   return (
     <TableHead>
       <TableRow>
-
+        {editMode ? (
+          <TableCell padding="checkbox">
+            <Checkbox
+              color="primary"
+              indeterminate={numSelected > 0 && numSelected < rowCount}
+              checked={rowCount > 0 && numSelected === rowCount}
+              onChange={onSelectAllClick}
+              inputProps={{
+                'aria-label': 'select all editable tracks',
+              }}
+            />
+          </TableCell>
+        ) : (
+          <TableCell padding="checkbox">Link</TableCell>
+        )}
+        <TableCell padding="checkbox" />
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
@@ -170,49 +155,31 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 }
 
 
-function EnhancedTableToolbar() {
-  // This is for the selecting of tracks, deleting and filtering button
-
-  return (
-    <Toolbar
-      sx={{
-        pl: { sm: 3 },
-        pr: { xs: 2, sm: 2 },
-        py: 2,
-        background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-        borderBottom: '2px solid #e2e8f0',
-      }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        <Typography 
-          variant="h5" 
-          sx={{ 
-            fontWeight: 700,
-            color: '#1e293b',
-            letterSpacing: '-0.01em',
-          }}
-        >
-          Sets and Tracks
-        </Typography>
-      </Box>
-    </Toolbar>
-  );
-}
 
 export default function SongsTable() {
-  const [openSidebar, setOpenSidebar] = useState(false);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [tracks, setTracks] = useState<Track[] | []>([]);
   const [averageRatings, setAverageRatings] = useState<Record<string, number | null>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [order, setOrder] = useState<Order>('asc');
   const [orderBy, setOrderBy] = useState<keyof Track>('title');
-  const [selected, setSelected] = useState<readonly string[]>([]);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const rowsPerPage = 10;
   const [addTrackOpen, setAddTrackOpen] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const { activeGroupId } = useAuth();
+  const { activeGroupId, user } = useAuth();
+
+  // Edit mode & selection
+  const [editMode, setEditMode] = useState(false);
+  const [selected, setSelected] = useState<readonly string[]>([]);
+
+  // Filter states
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [genreFilter, setGenreFilter] = useState('');
+  const [artistFilter, setArtistFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [minRating, setMinRating] = useState(0);
 
   // // const { user } = useAuth();
   // useEffect(() => {
@@ -257,18 +224,74 @@ export default function SongsTable() {
     setOrderBy(property);
   };
 
-  const handleClick = (_event: React.MouseEvent<unknown>, id: string) => {
-    setSelected([id]);
-    setOpenSidebar(true);
+  const handleRowClick = (_event: React.MouseEvent<unknown>, id: string) => {
+    if (!editMode) {
+      setExpandedRow(expandedRow === id ? null : id);
+    }
+  };
+
+  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      const userTracks = visibleRows.filter(track => 
+        track.added_by_id === user?.uid || user?.role === 'admin'
+      ).map(n => n.id);
+      setSelected(userTracks);
+      return;
+    }
+    setSelected([]);
+  };
+
+  const handleCheckboxClick = (_event: React.MouseEvent<unknown>, id: string, track: Track) => {
+    // Only allow selection if user owns the track or is admin
+    if (track.added_by_id !== user?.uid && user?.role !== 'admin') {
+      return;
+    }
+
+    const selectedIndex = selected.indexOf(id);
+    let newSelected: readonly string[] = [];
+
+    if (selectedIndex === -1) {
+      newSelected = newSelected.concat(selected, id);
+    } else if (selectedIndex === 0) {
+      newSelected = newSelected.concat(selected.slice(1));
+    } else if (selectedIndex === selected.length - 1) {
+      newSelected = newSelected.concat(selected.slice(0, -1));
+    } else if (selectedIndex > 0) {
+      newSelected = newSelected.concat(
+        selected.slice(0, selectedIndex),
+        selected.slice(selectedIndex + 1),
+      );
+    }
+
+    setSelected(newSelected);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selected.length === 0) return;
+
+    if (window.confirm(`Are you sure you want to delete ${selected.length} track(s)?`)) {
+      try {
+        const { deleteTracks } = await import('firebaseServices/firestore');
+        await deleteTracks(selected);
+        setSelected([]);
+        setEditMode(false);
+        console.log('Tracks deleted successfully');
+      } catch (error) {
+        console.error('Error deleting tracks:', error);
+        setErrorMessage('Failed to delete tracks. Please try again.');
+        setShowErrorDialog(true);
+      }
+    }
+  };
+
+  const toggleEditMode = () => {
+    setEditMode(!editMode);
+    setSelected([]);
+    setExpandedRow(null);
   };
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
   };
 
 
@@ -282,22 +305,47 @@ export default function SongsTable() {
     }));
   }, [tracks, averageRatings]);
   
+  // Apply filters
+  const filteredTracks = useMemo(() => {
+    return computedTracks.filter((track) => {
+      // Genre filter
+      if (genreFilter && track.genre !== genreFilter) return false;
+      
+      // Artist filter
+      if (artistFilter && track.artist !== artistFilter) return false;
+      
+      // Search query (title or tags)
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const titleMatch = track.title?.toLowerCase().includes(query);
+        const tagsMatch = track.tags?.some(tag => tag.toLowerCase().includes(query));
+        if (!titleMatch && !tagsMatch) return false;
+      }
+      
+      // Min rating filter
+      if (minRating > 0 && (track.rating === null || track.rating < minRating)) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [computedTracks, genreFilter, artistFilter, searchQuery, minRating]);
+  
   const visibleRows = useMemo(() => {
-    return [...computedTracks]
+    return [...filteredTracks]
       .sort(getComparator(order, orderBy))
       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-  }, [order, orderBy, page, rowsPerPage, computedTracks]);
+  }, [order, orderBy, page, rowsPerPage, filteredTracks]);
   
 
 
   return (
     
-    <Box sx={{ width: '100%', display: 'flex'}}>
+    <Box sx={{ width: '100%'}}>
       <Paper 
         elevation={0}
         sx={{
-          width: openSidebar ? `calc(100% - 300px)` : '100%',
-          marginRight: openSidebar ? {SIDEBAR_WIDTH} : '0px',
+          width: '100%',
           borderRadius: '20px',
           overflow: 'hidden',
           background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
@@ -311,12 +359,54 @@ export default function SongsTable() {
             height: '10px',
           },
         }}>
-        <EnhancedTableToolbar />
+        <Box sx={{ px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2, borderBottom: '2px solid #e2e8f0', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
+          <Box sx={{ flex: 1 }}>
+            <TrackFilters
+              tracks={computedTracks}
+              filtersOpen={filtersOpen}
+              setFiltersOpen={setFiltersOpen}
+              genreFilter={genreFilter}
+              artistFilter={artistFilter}
+              searchQuery={searchQuery}
+              minRating={minRating}
+              setGenreFilter={setGenreFilter}
+              setArtistFilter={setArtistFilter}
+              setSearchQuery={setSearchQuery}
+              setMinRating={setMinRating}
+            />
+          </Box>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleAddTrackOpen}
+            sx={{ 
+              px: 3,
+              py: 1.5,
+              fontWeight: 600,
+              fontSize: '1rem',
+              minWidth: '180px',
+              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 8px 20px rgba(99, 102, 241, 0.4)',
+              },
+              transition: 'all 0.2s ease',
+            }}
+          >
+            + Add New Track
+          </Button>
+        </Box>
           <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
             <EnhancedTableHead
               order={order}
               orderBy={orderBy}
               onRequestSort={handleRequestSort}
+              editMode={editMode}
+              numSelected={selected.length}
+              rowCount={visibleRows.filter(track => track.added_by_id === user?.uid || user?.role === 'admin').length}
+              onSelectAllClick={handleSelectAllClick}
             />
             <TableBody>
   {isLoading || !tracks ? (
@@ -329,26 +419,86 @@ export default function SongsTable() {
     </TableRow>
   ) : (
     <>
-      {visibleRows.map((track, index) => {
+      {visibleRows.map((track) => {
         const isItemSelected = selected.includes(track.id);
-        const labelId = `enhanced-table-checkbox-${index}`;
+        const canEdit = track.added_by_id === user?.uid || user?.role === 'admin';
 
         return (
-          <TableRow
-            hover
-            role="checkbox"
-            aria-checked={isItemSelected}
-            tabIndex={-1}
-            key={track.id}
-            selected={isItemSelected}
-            sx={{ cursor: 'pointer' }}
-            onClick={(event) => handleClick(event, track.id)}
-          >
-            <TableCell component="th" id={labelId} scope="row" padding="normal" onClick={() => setOpenSidebar(true)}>
-              {track.title}
-            </TableCell>
+          <React.Fragment key={track.id}>
+            <TableRow
+              hover
+              tabIndex={-1}
+              sx={{ 
+                cursor: 'pointer',
+                '& > *': { borderBottom: expandedRow === track.id ? 'none' : undefined }
+              }}
+            >
+              <TableCell padding="checkbox">
+                {editMode ? (
+                  <Checkbox
+                    color="primary"
+                    checked={isItemSelected}
+                    disabled={!canEdit}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleCheckboxClick(event, track.id, track);
+                    }}
+                    sx={{
+                      opacity: canEdit ? 1 : 0.3,
+                    }}
+                  />
+                ) : (
+                  track.permalink && (
+                    <Tooltip title="Open in SoundCloud">
+                      <IconButton
+                        component="a"
+                        href={track.permalink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        size="small"
+                        sx={{
+                          color: '#6366f1',
+                          '&:hover': {
+                            color: '#8b5cf6',
+                            transform: 'scale(1.1)',
+                          },
+                        }}
+                      >
+                        <LinkIcon />
+                      </IconButton>
+                    </Tooltip>
+                  )
+                )}
+              </TableCell>
+              <TableCell padding="checkbox">
+                {!editMode && (
+                  <IconButton
+                    size="small"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleRowClick(event, track.id);
+                    }}
+                    sx={{
+                      transition: 'transform 0.2s',
+                      transform: expandedRow === track.id ? 'rotate(180deg)' : 'rotate(0deg)',
+                    }}
+                  >
+                    {expandedRow === track.id ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                  </IconButton>
+                )}
+              </TableCell>
+              <TableCell 
+                component="th" 
+                scope="row" 
+                padding="normal" 
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleRowClick(event, track.id);
+                }}
+              >
+                {track.title}
+              </TableCell>
             <TableCell>{track.artist}</TableCell>
-            <TableCell>{track.publish_date}</TableCell>
             <TableCell align="right">
               {averageRatings[track.id] != null ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'flex-end' }}>
@@ -378,43 +528,24 @@ export default function SongsTable() {
                 </Typography>
               )}
             </TableCell>
-            <TableCell>{track.genre}</TableCell>
-            <TableCell align="right">{track.likes}</TableCell>
-            <TableCell align="right">{track.playbacks}</TableCell>
-            <TableCell align='left'>
-            {track.permalink && (
-    <Tooltip title="Open link in new tab">
-      <a
-        href={track.permalink}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ 
-          display: 'inline-flex',
-          alignItems: 'center',
-          transition: 'all 0.2s ease',
-        }}
-      >
-        <LinkIcon sx={{ 
-          color: '#6366f1',
-          '&:hover': {
-            color: '#8b5cf6',
-            transform: 'scale(1.1)',
-          },
-        }} />
-      </a>
-    </Tooltip>
-  )}
-</TableCell>
-            <TableCell sx={{ width: 100, whiteSpace: 'pre-line' }}>
-              {track.tags ? track.tags.join('\n') : ''}
-            </TableCell>
             <TableCell>{track.added_by_name}</TableCell>
           </TableRow>
+          {!editMode && (
+            <TrackDetailRow
+              track={track}
+              open={expandedRow === track.id}
+              colSpan={headCells.length + 2}
+              onClose={() => setExpandedRow(null)}
+              setErrorMessage={setErrorMessage}
+              setShowErrorDialog={setShowErrorDialog}
+            />
+          )}
+        </React.Fragment>
         );
       })}
       {emptyRows > 0 && (
         <TableRow style={{ height: 53 * emptyRows }}>
-          <TableCell colSpan={7} />
+          <TableCell colSpan={headCells.length + 2} />
         </TableRow>
       )}
     </>
@@ -426,46 +557,98 @@ export default function SongsTable() {
         <TableFooter>
             <TableRow>
               <TableCell 
-                colSpan={headCells.length}  
+                colSpan={headCells.length + 2}  
                 sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
                   borderTop: '2px solid #e2e8f0',
-                  background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-                  py: 2,
+                  background: editMode 
+                    ? 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)'
+                    : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                  p: 0,
                 }}
               >
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleAddTrackOpen}
-                  sx={{ 
-                    ml: 2,
-                    px: 3,
-                    py: 1.2,
-                    fontWeight: 600,
-                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 8px 20px rgba(99, 102, 241, 0.4)',
-                    },
-                  }}
-                >
-                  + Add New Track
-                </Button>
+                <Box sx={{ 
+                  display: 'grid',
+                  gridTemplateColumns: '1fr auto 1fr',
+                  alignItems: 'center',
+                  width: '100%',
+                }}>
+                  {/* Left side - Edit mode controls or empty */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 2 }}>
+                    {editMode && (
+                      <>
+                        <Typography
+                          sx={{ fontWeight: 700, color: '#dc2626' }}
+                          variant="subtitle1"
+                        >
+                          {selected.length} selected
+                        </Typography>
+                        <Button
+                          startIcon={<DeleteIcon />}
+                          onClick={handleBulkDelete}
+                          disabled={selected.length === 0}
+                          color="error"
+                          variant="contained"
+                          sx={{
+                            fontWeight: 600,
+                          }}
+                        >
+                          Delete Selected
+                        </Button>
+                        <Button
+                          startIcon={<CloseIcon />}
+                          onClick={toggleEditMode}
+                          sx={{
+                            fontWeight: 600,
+                            color: '#64748b',
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </>
+                    )}
+                  </Box>
 
-                <TablePagination
-                  sx={{ flexShrink: 0, ml: 2 }}
-                  rowsPerPageOptions={[5, 10, 25]}
-                  component="div"
-                  count={tracks ? tracks.length : 0}
-                  rowsPerPage={rowsPerPage}
-                  page={page}
-                  onPageChange={handleChangePage}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                />
+                  {/* Center - Pagination */}
+                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <TablePagination
+                      rowsPerPageOptions={[]}
+                      component="div"
+                      count={filteredTracks ? filteredTracks.length : 0}
+                      rowsPerPage={rowsPerPage}
+                      page={page}
+                      onPageChange={handleChangePage}
+                      labelDisplayedRows={({ from, to, count }) => `${from}-${to} of ${count}`}
+                      sx={{
+                        border: 'none',
+                        '& .MuiTablePagination-toolbar': {
+                          minHeight: '52px',
+                        }
+                      }}
+                    />
+                  </Box>
+
+                  {/* Right side - Edit button */}
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mr: 2 }}>
+                    {!editMode && (user?.role === 'admin' || tracks.some(track => track.added_by_id === user?.uid)) && (
+                      <Button
+                        variant="text"
+                        onClick={toggleEditMode}
+                        sx={{
+                          color: '#64748b',
+                          fontSize: '0.875rem',
+                          textTransform: 'none',
+                          minWidth: 'auto',
+                          '&:hover': {
+                            background: 'transparent',
+                            color: '#475569',
+                          },
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    )}
+                  </Box>
+                </Box>
               </TableCell>
             </TableRow>
           </TableFooter>
@@ -481,14 +664,6 @@ export default function SongsTable() {
         message={errorMessage}
         messageType="error"
       />
-      <SmallSidebar
-        trackId={selected.length > 0 ? selected[0] : ''}
-        open={openSidebar}
-        setOpen={setOpenSidebar}
-        setErrorMessage={setErrorMessage}
-        setShowErrorDialog={setShowErrorDialog}
-        setSelected={setSelected}
-        />
     </Box>
   );
 }

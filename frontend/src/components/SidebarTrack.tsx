@@ -19,7 +19,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { useAuth } from './AuthProvider';
 import { SIDEBAR_WIDTH } from 'utils/constants';
-import { deleteTracks, getTracksFromIds, postComment, getComments, getDisplayNameFromUserId, getTrackFromId } from 'firebaseServices/firestore';
+import { deleteTracks, getTracksFromIds, postComment, getComments, getDisplayNameFromUserId, getTrackFromId, addActivity } from 'firebaseServices/firestore';
 import StarRating from './StarRating';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -49,7 +49,7 @@ export default function SmallSidebar({
   setShowErrorDialog,
   setSelected,
 }: SmallSidebarProps) {
-  const { user } = useAuth();
+  const { user, activeGroupId } = useAuth();
   const [comments, setComments] = useState<TrackComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [trackTitle, setTrackTitle] = useState('');
@@ -63,6 +63,18 @@ export default function SmallSidebar({
     try {
       if (allTracksAddedByUser || user?.role === 'admin') {
         await deleteTracks([trackId]);
+        
+        // Log activity
+        if (user && activeGroupId) {
+          await addActivity({
+            type: 'track_deleted',
+            userId: user.uid,
+            userName: user.displayName || user.email || 'Anonymous',
+            groupId: activeGroupId,
+            trackTitle: trackTitle,
+          });
+        }
+        
         setOpen(false);
       } else {
         setErrorMessage('You can only delete tracks that you yourself have added.');
@@ -88,8 +100,21 @@ export default function SmallSidebar({
       if (user) {
         // Logged-in: persist comment to backend
         postComment(trackId, user.uid, newComment.trim())
-          .then(() => {
+          .then(async () => {
             console.log('Comment posted successfully');
+            
+            // Log activity
+            if (activeGroupId) {
+              await addActivity({
+                type: 'comment_added',
+                userId: user.uid,
+                userName: user.displayName || user.email || 'Anonymous',
+                groupId: activeGroupId,
+                trackId: trackId,
+                trackTitle: trackTitle,
+                comment: newComment.trim(),
+              });
+            }
           })
           .catch((error) => {
             console.error('Error posting comment:', error);
@@ -227,8 +252,10 @@ export default function SmallSidebar({
             mb: 3,
             border: '2px solid #c7d2fe',
             boxShadow: '0 4px 12px rgba(99, 102, 241, 0.1)',
-          }} 
-          alignContent={"center"}
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
         >
           <StarRating id={trackId}/>
         </Box>

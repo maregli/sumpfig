@@ -5,7 +5,7 @@ import IconButton from '@mui/material/IconButton';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 // import { Typography } from '@mui/material';
-import { addTrack } from 'firebaseServices/firestore';
+import { addTrack, addActivity } from 'firebaseServices/firestore';
 
 import { useAuth } from 'components/AuthProvider';
 
@@ -59,8 +59,20 @@ const AddTrackForm = (props: { handleClickClose: () => void }) => {
       return;
     }
     addTrack(track)
-      .then(() => {
+      .then(async () => {
         console.log('Track added successfully!');
+        
+        // Log activity
+        if (user && activeGroupId) {
+          await addActivity({
+            type: 'track_added',
+            userId: user.uid,
+            userName: user.displayName || user.email || 'Anonymous',
+            groupId: activeGroupId,
+            trackTitle: track.title || 'Unknown Track',
+          });
+        }
+        
         // Reset the form after submission
         setTrack({ ...emptyTrack });
         handleClickClose(); // Close the modal after submission
