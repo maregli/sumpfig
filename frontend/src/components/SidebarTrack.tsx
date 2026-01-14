@@ -52,7 +52,6 @@ export default function SmallSidebar({
   const { user } = useAuth();
   const [comments, setComments] = useState<TrackComment[]>([]);
   const [newComment, setNewComment] = useState('');
-  const [_isLoadingComments, setIsLoadingComments] = useState(false);
   const [trackTitle, setTrackTitle] = useState('');
 
   const handleDeleteSelected = async () => {
@@ -127,7 +126,6 @@ export default function SmallSidebar({
   useEffect(() => {
     const loadCommentsWithDisplayNames = async () => {
       if (!trackId || !open) return;
-      setIsLoadingComments(true);
   
       try {
         const fetchedTrack = await getTrackFromId(trackId);
@@ -161,61 +159,97 @@ export default function SmallSidebar({
         console.error('Error loading comments:', error);
         setErrorMessage('Failed to load comments.');
         setShowErrorDialog(true);
-      } finally {
-        setIsLoadingComments(false);
       }
     };
   
     loadCommentsWithDisplayNames();
-  }, [trackId, open]);
+  }, [trackId, open, setErrorMessage, setShowErrorDialog]);
   
 
   return (
     <Collapse in={open} orientation="horizontal">
       <Paper
-        elevation={3}
+        elevation={0}
         sx={{
           width: SIDEBAR_WIDTH,
           height: '100vh',
-          p: 2,
+          p: 3,
           boxSizing: 'border-box',
           overflow: 'auto',
           marginLeft: '10px',
           display: 'flex',
           flexDirection: 'column',
+          borderRadius: '20px 0 0 20px',
+          background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
+          boxShadow: '-10px 0 30px -5px rgba(99, 102, 241, 0.15)',
+          border: '1px solid #e2e8f0',
+          borderRight: 'none',
         }}
       >
         {/* Close Button */}
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <IconButton onClick={() => handleClose()}>
+        <Box display="flex" justifyContent="flex-end" alignItems="center" sx={{ mb: 2 }}>
+          <IconButton 
+            onClick={() => handleClose()}
+            sx={{
+              '&:hover': {
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                transform: 'rotate(90deg)',
+              },
+              transition: 'all 0.3s ease',
+            }}
+          >
             <CloseIcon />
           </IconButton>
         </Box>
 
         {/* Title */}
         <Typography
-  variant="h6"
-  gutterBottom
-  sx={{
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-    color: 'black',
-    textTransform: 'capitalize',
-  }}
->
-  {trackTitle}
-</Typography>
-        <Box sx={{backgroundColor: "#f0f0f0", padding: 1, borderRadius: 1, mb: 2}} alignContent={"center"}>
+          variant="h5"
+          gutterBottom
+          sx={{
+            fontWeight: 700,
+            letterSpacing: '-0.01em',
+            color: '#1e293b',
+            mb: 3,
+            pb: 2,
+            borderBottom: '2px solid #e2e8f0',
+          }}
+        >
+          {trackTitle}
+        </Typography>
+        
+        {/* Star Rating Card */}
+        <Box 
+          sx={{
+            background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)',
+            padding: 2.5, 
+            borderRadius: '16px', 
+            mb: 3,
+            border: '2px solid #c7d2fe',
+            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.1)',
+          }} 
+          alignContent={"center"}
+        >
           <StarRating id={trackId}/>
         </Box>
 
         {/* New Comment Input */}
+        <Typography 
+          variant="subtitle1" 
+          sx={{ 
+            fontWeight: 600, 
+            color: '#1e293b', 
+            mb: 2 
+          }}
+        >
+          Add Comment
+        </Typography>
         <TextField
           fullWidth
           variant="outlined"
-          label="Add a comment"
+          label="Share your thoughts..."
           multiline
-          minRows={2}
+          minRows={3}
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           sx={{ mb: 2 }}
@@ -224,30 +258,64 @@ export default function SmallSidebar({
           variant="contained"
           onClick={handleAddComment}
           disabled={!newComment.trim()}
+          fullWidth
+          sx={{
+            py: 1.5,
+            fontWeight: 600,
+            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+            },
+          }}
         >
           Post Comment
         </Button>
 
-        <Divider sx={{ my: 2 }} />
+        <Divider sx={{ my: 3, borderColor: '#e2e8f0' }} />
 
         {/* Comment List */}
+        <Typography 
+          variant="subtitle1" 
+          sx={{ 
+            fontWeight: 600, 
+            color: '#1e293b', 
+            mb: 2 
+          }}
+        >
+          Comments ({comments.length})
+        </Typography>
         <List sx={{ flexGrow: 1 }}>
           {comments.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
-              No comments yet.
-            </Typography>
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="body2" color="text.secondary">
+                No comments yet. Be the first to share!
+              </Typography>
+            </Box>
           ) : (
             comments.map((comment, index) => (
-                <ListItem key={index} alignItems="flex-start" disableGutters sx={{ mb: 0.5 }}>
+                <ListItem 
+                  key={index} 
+                  alignItems="flex-start" 
+                  disableGutters 
+                  sx={{ mb: 2 }}
+                >
                   <Grid container>
                     {/* Top row: Author and timestamp */}
                     <Grid size={6} textAlign={"left"}>
-                        <Typography variant="body2" fontWeight="bold">
+                        <Typography 
+                          variant="body2" 
+                          fontWeight={600}
+                          sx={{ color: '#6366f1' }}
+                        >
                           {comment.author}
                         </Typography>
                         </Grid>
                         <Grid size={6} textAlign="right" alignContent={"right"}>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary"
+                          sx={{ fontSize: '0.75rem' }}
+                        >
                             {formatDistanceToNow(comment.timestamp, { addSuffix: true })}
                         </Typography>
                         </Grid>
@@ -256,12 +324,22 @@ export default function SmallSidebar({
                     <Grid size={12}>
                     <Box
                         sx={{
-                        maxWidth: SIDEBAR_WIDTH, // or a fixed height like 100
-                        p: 1,
-                        borderRadius: 1,
+                        maxWidth: SIDEBAR_WIDTH,
+                        p: 2,
+                        mt: 1,
+                        borderRadius: '12px',
+                        backgroundColor: '#f8fafc',
+                        border: '1px solid #e2e8f0',
                         }}
                     >
-                        <Typography variant="body1" sx={{ wordBreak: "break-word" }}>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            wordBreak: "break-word",
+                            lineHeight: 1.6,
+                            color: '#475569',
+                          }}
+                        >
                         {comment.text}
                         </Typography>
                     </Box>
@@ -274,13 +352,24 @@ export default function SmallSidebar({
         </List>
 
         {/* Bottom Buttons */}
-        <Divider sx={{ mt: 2, mb: 1 }} />
-        <Box mt="auto" display="flex" justifyContent="space-between">
+        <Divider sx={{ mt: 3, mb: 2, borderColor: '#e2e8f0' }} />
+        <Box mt="auto" display="flex" flexDirection="column" gap={1.5}>
           <Button
             variant="outlined"
-            color="secondary"
             startIcon={<EditIcon />}
             onClick={handleEditTrack}
+            fullWidth
+            sx={{
+              py: 1.2,
+              fontWeight: 600,
+              borderWidth: 2,
+              borderColor: '#6366f1',
+              color: '#6366f1',
+              '&:hover': {
+                borderWidth: 2,
+                backgroundColor: 'rgba(99, 102, 241, 0.05)',
+              },
+            }}
           >
             Edit Track
           </Button>
@@ -289,6 +378,15 @@ export default function SmallSidebar({
             color="error"
             startIcon={<DeleteIcon />}
             onClick={handleDeleteSelected}
+            fullWidth
+            sx={{
+              py: 1.2,
+              fontWeight: 600,
+              borderWidth: 2,
+              '&:hover': {
+                borderWidth: 2,
+              },
+            }}
           >
             Delete Track
           </Button>

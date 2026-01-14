@@ -16,12 +16,12 @@ const Main = styled('main', {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  marginLeft: open ? `10px` : `-${drawerWidth-10}px`,
-  marginRight: `10px`,
-  marginTop: `10px`,
-  marginBottom: `10px`,
+  marginLeft: open ? `16px` : `-${drawerWidth-16}px`,
+  marginRight: `16px`,
+  marginTop: `16px`,
+  marginBottom: `16px`,
   width: open ? `calc(100% - ${drawerWidth}px)` : '100%',
-  padding: 0, // ✅ Remove padding
+  padding: 0,
 }));
 
 const AppLayout: React.FC = () => {
@@ -29,7 +29,7 @@ const AppLayout: React.FC = () => {
   const { user } = useAuth();
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       <CssBaseline />
       <AppTopBar open={sidebarOpen} onMenuClick={() => setSidebarOpen(true)} />
       <Sidebar side="left" open={sidebarOpen} onClose={() => setSidebarOpen(false)} />

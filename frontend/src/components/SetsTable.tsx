@@ -175,16 +175,26 @@ function EnhancedTableToolbar() {
 
   return (
     <Toolbar
-      sx={[
-        {
-          pl: { sm: 2 },
-          pr: { xs: 1, sm: 1 },
-        },
-      ]}
+      sx={{
+        pl: { sm: 3 },
+        pr: { xs: 2, sm: 2 },
+        py: 2,
+        background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+        borderBottom: '2px solid #e2e8f0',
+      }}
     >
-      <Typography sx={{ flex: '1 1 100%' }}>
-        Sets and Tracks
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Typography 
+          variant="h5" 
+          sx={{ 
+            fontWeight: 700,
+            color: '#1e293b',
+            letterSpacing: '-0.01em',
+          }}
+        >
+          Sets and Tracks
+        </Typography>
+      </Box>
     </Toolbar>
   );
 }
@@ -194,7 +204,6 @@ export default function SongsTable() {
   const [tracks, setTracks] = useState<Track[] | []>([]);
   const [averageRatings, setAverageRatings] = useState<Record<string, number | null>>({});
   const [isLoading, setIsLoading] = useState(true);
-  const [_error, setError] = useState<Error | null>(null);
   const [order, setOrder] = useState<Order>('asc');
   const [orderBy, setOrderBy] = useState<keyof Track>('title');
   const [selected, setSelected] = useState<readonly string[]>([]);
@@ -207,13 +216,13 @@ export default function SongsTable() {
 
   // // const { user } = useAuth();
   // useEffect(() => {
-  //   const unsubscribe = subscribeToTracks(setTracks, setIsLoading, setError);
+  //   const unsubscribe = subscribeToTracks(setTracks, setIsLoading, () => {});
 
   //   return () => unsubscribe();
   // }, []); // Empty dependency array ensures this runs only once on mount
     // const { user } = useAuth();
   useEffect(() => {
-      const unsubscribe = subscribeToTracksByGroupId(activeGroupId || "", setTracks, setIsLoading, setError);
+      const unsubscribe = subscribeToTracksByGroupId(activeGroupId || "", setTracks, setIsLoading, () => {});
   
       return () => unsubscribe();
     }, [activeGroupId]); // Empty dependency array ensures this runs only once on mount
@@ -284,12 +293,24 @@ export default function SongsTable() {
   return (
     
     <Box sx={{ width: '100%', display: 'flex'}}>
-      <Paper sx={{
-        width: openSidebar ? `calc(100% - 300px)` : '100%',
-        marginRight: openSidebar ? {SIDEBAR_WIDTH} : '0px',
-      }}>
+      <Paper 
+        elevation={0}
+        sx={{
+          width: openSidebar ? `calc(100% - 300px)` : '100%',
+          marginRight: openSidebar ? {SIDEBAR_WIDTH} : '0px',
+          borderRadius: '20px',
+          overflow: 'hidden',
+          background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
+          boxShadow: '0 10px 30px -5px rgba(99, 102, 241, 0.15)',
+          border: '1px solid #e2e8f0',
+        }}
+      >
         
-        <TableContainer>
+        <TableContainer sx={{ 
+          '&::-webkit-scrollbar': {
+            height: '10px',
+          },
+        }}>
         <EnhancedTableToolbar />
           <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
             <EnhancedTableHead
@@ -330,18 +351,31 @@ export default function SongsTable() {
             <TableCell>{track.publish_date}</TableCell>
             <TableCell align="right">
               {averageRatings[track.id] != null ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'flex-end' }}>
                   {Array.from({ length: 5 }, (_, i) => (
-                    <span key={i} style={{ color: 'black', fontSize: '14px' }}>
+                    <span key={i} style={{ 
+                      color: '#fbbf24', 
+                      fontSize: '16px',
+                      filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))',
+                    }}>
                       {i < Math.round(averageRatings[track.id]!) ? '★' : '☆'}
                     </span>
                   ))}
-                  <Typography variant="body2" sx={{ ml: 1 }}>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      ml: 1,
+                      fontWeight: 600,
+                      color: '#64748b',
+                    }}
+                  >
                     {averageRatings[track.id]!.toFixed(1)}
                   </Typography>
                 </Box>
               ) : (
-                'No ratings'
+                <Typography variant="body2" color="text.secondary">
+                  No ratings
+                </Typography>
               )}
             </TableCell>
             <TableCell>{track.genre}</TableCell>
@@ -354,8 +388,19 @@ export default function SongsTable() {
         href={track.permalink}
         target="_blank"
         rel="noopener noreferrer"
+        style={{ 
+          display: 'inline-flex',
+          alignItems: 'center',
+          transition: 'all 0.2s ease',
+        }}
       >
-        <LinkIcon />
+        <LinkIcon sx={{ 
+          color: '#6366f1',
+          '&:hover': {
+            color: '#8b5cf6',
+            transform: 'scale(1.1)',
+          },
+        }} />
       </a>
     </Tooltip>
   )}
@@ -380,14 +425,35 @@ export default function SongsTable() {
         </TableContainer>
         <TableFooter>
             <TableRow>
-              <TableCell colSpan={headCells.length}  sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <TableCell 
+                colSpan={headCells.length}  
+                sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  borderTop: '2px solid #e2e8f0',
+                  background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                  py: 2,
+                }}
+              >
                 <Button
                   variant="contained"
                   color="primary"
                   onClick={handleAddTrackOpen}
-                  sx={{ ml: 2 }}
+                  sx={{ 
+                    ml: 2,
+                    px: 3,
+                    py: 1.2,
+                    fontWeight: 600,
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 20px rgba(99, 102, 241, 0.4)',
+                    },
+                  }}
                 >
-                  Add New Track
+                  + Add New Track
                 </Button>
 
                 <TablePagination

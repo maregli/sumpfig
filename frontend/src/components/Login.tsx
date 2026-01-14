@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import { Button, Typography, TextField, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Button, Typography, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Box } from '@mui/material';
 import { auth } from 'firebaseServices/firebaseConfig';
 // import { GoogleAuthProvider } from 'firebase/auth';
 import {
@@ -129,32 +129,116 @@ const LoginButton: React.FC = () => {
 
   if (user) {
     return (
-      <>
-        <Typography variant="body1" sx={{ mr: 2 }}>
-          {user.displayName ?? user.email}
-        </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1.5,
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            px: 2,
+            py: 1,
+            borderRadius: '12px',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
+          <Box
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 700,
+              color: 'white',
+              fontSize: '0.9rem',
+            }}
+          >
+            {(user.displayName ?? user.email ?? 'U')[0].toUpperCase()}
+          </Box>
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              fontWeight: 600,
+              color: 'white',
+              textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+            }}
+          >
+            {user.displayName ?? user.email}
+          </Typography>
+        </Box>
         <Button
           variant="outlined"
-          color="secondary"
           onClick={handleLogout}
           startIcon={<LogoutIcon />}
+          sx={{
+            color: 'white',
+            borderColor: 'rgba(255, 255, 255, 0.5)',
+            borderWidth: 2,
+            fontWeight: 600,
+            '&:hover': {
+              borderColor: 'white',
+              backgroundColor: 'rgba(255, 255, 255, 0.15)',
+              borderWidth: 2,
+            },
+          }}
         >
           Logout
         </Button>
-      </>
+      </Box>
     );
   }
 
   return (
     <>
-      <Button variant="contained" onClick={() => setOpen(true)}>
+      <Button 
+        variant="contained" 
+        onClick={() => setOpen(true)}
+        sx={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          color: '#6366f1',
+          fontWeight: 700,
+          px: 3,
+          py: 1.2,
+          '&:hover': {
+            background: 'white',
+            transform: 'translateY(-2px)',
+            boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2)',
+          },
+        }}
+      >
         Login
       </Button>
   
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle textAlign="center">Welcome</DialogTitle>
+      <Dialog 
+        open={open} 
+        onClose={() => setOpen(false)} 
+        maxWidth="xs" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '24px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          }
+        }}
+      >
+        <DialogTitle 
+          textAlign="center" 
+          sx={{ 
+            pt: 4, 
+            pb: 2,
+            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            color: 'white',
+            fontWeight: 700,
+            fontSize: '1.5rem',
+          }}
+        >
+          Welcome to Sumpfig
+        </DialogTitle>
   
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', pt: 3, pb: 2 }}>
           {/* <Button
             variant="contained"
             onClick={handleGoogleLogin}
@@ -229,18 +313,64 @@ const LoginButton: React.FC = () => {
           )}
         </DialogContent>
   
-        <DialogActions sx={{ justifyContent: 'space-between', px: 3, pb: 2 }}>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
+        <DialogActions sx={{ justifyContent: 'space-between', px: 3, pb: 3, pt: 2 }}>
+          <Button 
+            onClick={() => setOpen(false)}
+            sx={{ 
+              color: '#64748b',
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </Button>
           {!isSignUp ? (
-  <>
-    <Button onClick={handleEmailPasswordLogin} variant="contained">Login</Button>
-    <Button onClick={() => setIsSignUp(true)} variant="text">Sign Up</Button>
-  </>
+  <Box sx={{ display: 'flex', gap: 1 }}>
+    <Button 
+      onClick={handleEmailPasswordLogin} 
+      variant="contained"
+      sx={{
+        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+        fontWeight: 600,
+        px: 3,
+      }}
+    >
+      Login
+    </Button>
+    <Button 
+      onClick={() => setIsSignUp(true)} 
+      variant="text"
+      sx={{
+        color: '#6366f1',
+        fontWeight: 600,
+      }}
+    >
+      Sign Up
+    </Button>
+  </Box>
 ) : (
-  <>
-    <Button onClick={handleEmailPasswordSignUp} variant="contained">Sign Up</Button>
-    <Button onClick={() => setIsSignUp(false)} variant="text">Back to Login</Button>
-  </>
+  <Box sx={{ display: 'flex', gap: 1 }}>
+    <Button 
+      onClick={handleEmailPasswordSignUp} 
+      variant="contained"
+      sx={{
+        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+        fontWeight: 600,
+        px: 3,
+      }}
+    >
+      Sign Up
+    </Button>
+    <Button 
+      onClick={() => setIsSignUp(false)} 
+      variant="text"
+      sx={{
+        color: '#6366f1',
+        fontWeight: 600,
+      }}
+    >
+      Back to Login
+    </Button>
+  </Box>
 )}
 
         </DialogActions>

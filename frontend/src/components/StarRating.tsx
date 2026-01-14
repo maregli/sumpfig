@@ -14,7 +14,6 @@ interface StarRatingProps {
 const StarRating: React.FC<StarRatingProps> = ({ id = '' }) => {
   const { user } = useAuth();
   const [fillValue, setFillValue] = useState<number>(0); // Defaults to 0 if not rated yet
-  const [_isLoading, setIsLoading] = useState(true);
 
   // Fetch the rating when the component mounts
   useEffect(() => {
@@ -25,8 +24,6 @@ const StarRating: React.FC<StarRatingProps> = ({ id = '' }) => {
           setFillValue(rating || 0);
         } catch (error) {
           console.error('Error fetching rating:', error);
-        } finally {
-          setIsLoading(false);
         }
       }
     };
@@ -60,24 +57,59 @@ const StarRating: React.FC<StarRatingProps> = ({ id = '' }) => {
   
 
   return (
-    <Box display="inline-flex" alignItems="center" justifyContent="center" gap={0.5}>
-      <Typography variant="body2" color="text.secondary">
-        {fillValue > 0 ? `Your rating: ${fillValue}/5` : 'Rate this track'}
+    <Box display="flex" flexDirection="column" alignItems="center" gap={1.5}>
+      <Typography 
+        variant="subtitle2" 
+        sx={{
+          fontWeight: 600,
+          color: '#1e293b',
+          textAlign: 'center',
+        }}
+      >
+        {fillValue > 0 ? (
+          <Box component="span">
+            Your rating: <Box component="span" sx={{ color: '#6366f1', fontWeight: 700 }}>{fillValue}/5</Box>
+          </Box>
+        ) : (
+          'Rate this track'
+        )}
       </Typography>
 
-      {[1, 2, 3, 4, 5].map((index) => (
-        <IconButton
-          key={index}
-          onClick={() => handleClick(id, index)}
-          size="small"
-        >
-          {index <= fillValue ? (
-            <StarIcon sx={{ color: '#FFD700' }} />
-          ) : (
-            <StarBorderIcon sx={{ color: '#FFD700' }} />
-          )}
-        </IconButton>
-      ))}
+      <Box display="inline-flex" alignItems="center" justifyContent="center" gap={0.5}>
+        {[1, 2, 3, 4, 5].map((index) => (
+          <IconButton
+            key={index}
+            onClick={() => handleClick(id, index)}
+            size="small"
+            sx={{
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                transform: 'scale(1.2)',
+              },
+            }}
+          >
+            {index <= fillValue ? (
+              <StarIcon 
+                sx={{ 
+                  color: '#fbbf24',
+                  fontSize: '2rem',
+                  filter: 'drop-shadow(0 2px 4px rgba(251, 191, 36, 0.4))',
+                }} 
+              />
+            ) : (
+              <StarBorderIcon 
+                sx={{ 
+                  color: '#d1d5db',
+                  fontSize: '2rem',
+                  '&:hover': {
+                    color: '#fbbf24',
+                  },
+                }} 
+              />
+            )}
+          </IconButton>
+        ))}
+      </Box>
     </Box>
   );
 };

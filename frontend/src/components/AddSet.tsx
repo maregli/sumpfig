@@ -10,10 +10,14 @@ import AddSetForm from './AddSetForm';
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
-    padding: theme.spacing(2),
+    padding: theme.spacing(3),
   },
   '& .MuiDialogActions-root': {
-    padding: theme.spacing(1),
+    padding: theme.spacing(2),
+  },
+  '& .MuiDialog-paper': {
+    borderRadius: '24px',
+    boxShadow: '0 25px 50px -12px rgba(99, 102, 241, 0.3)',
   },
 }));
 
@@ -28,18 +32,34 @@ export default function CustomizedDialogs(props: {open: boolean, handleClickClos
         aria-labelledby="customized-dialog-title"
         open={open}
       >
-        <DialogTitle sx={{ m: 0, p: 2 }} id="customized-dialog-title">
-          Modal title
+        <DialogTitle 
+          sx={{ 
+            m: 0, 
+            p: 3,
+            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            color: 'white',
+            fontWeight: 700,
+            fontSize: '1.5rem',
+          }} 
+          id="customized-dialog-title"
+        >
+          Add New Track
         </DialogTitle>
         <IconButton
           aria-label="close"
           onClick={handleClickClose}
-          sx={(theme) => ({
+          sx={{
             position: 'absolute',
-            right: 8,
-            top: 8,
-            color: theme.palette.grey[500],
-          })}
+            right: 12,
+            top: 12,
+            color: 'white',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              transform: 'rotate(90deg)',
+            },
+            transition: 'all 0.3s ease',
+          }}
         >
           <CloseIcon />
         </IconButton>

@@ -124,8 +124,7 @@ const AddTrackForm = (props: { handleClickClose: () => void }) => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        p: 3,
-        backgroundColor: '#f5f5f5',
+        p: 2,
       }}
     >
     <Box
@@ -134,9 +133,8 @@ const AddTrackForm = (props: { handleClickClose: () => void }) => {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              p: 3,
-              '& .MuiTextField-root': { m: 1, width: '100%' },
-              backgroundColor: '#f5f5f5',
+              width: '100%',
+              '& .MuiTextField-root': { mb: 2, width: '100%' },
           }}
           onSubmit={handleSubmit}
           noValidate
@@ -241,20 +239,47 @@ const AddTrackForm = (props: { handleClickClose: () => void }) => {
       {!user && (
   <Box
     sx={{
-      color: 'red',
-      fontSize: '0.9rem',
-      fontWeight: 'bold',
+      p: 2,
       mb: 2,
       mt: 1,
+      borderRadius: '12px',
+      background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+      border: '2px solid #fca5a5',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 1,
     }}
   >
-    🔒 You must be logged in to add a track.
+    <span style={{ fontSize: '1.5rem' }}>🔒</span>
+    <Box>
+      <Box sx={{ fontWeight: 700, color: '#dc2626', mb: 0.5 }}>
+        Login Required
+      </Box>
+      <Box sx={{ fontSize: '0.85rem', color: '#991b1b' }}>
+        You must be logged in to add a track.
+      </Box>
+    </Box>
   </Box>
 )}
-    <Box>
-        <DialogActions>
-    <Button variant="contained" color="primary" type="submit" sx={{ mt: 2 } } onClick={handleSubmit} disabled={!user}>
-           Submit
+    <Box sx={{ width: '100%' }}>
+        <DialogActions sx={{ px: 0, pb: 0 }}>
+    <Button 
+      variant="contained" 
+      type="submit" 
+      onClick={handleSubmit} 
+      disabled={!user}
+      fullWidth
+      sx={{ 
+        py: 1.5,
+        fontWeight: 600,
+        fontSize: '1rem',
+        background: !user ? undefined : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+        '&:hover': {
+          background: !user ? undefined : 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+        },
+      }}
+    >
+           Submit Track
          </Button>
  </DialogActions>
       </Box>

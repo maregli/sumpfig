@@ -39,9 +39,11 @@ const drawerWidth = 240;
 const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
-  padding: theme.spacing(0, 1),
+  padding: theme.spacing(2, 2),
   ...theme.mixins.toolbar,
   justifyContent: 'space-between',
+  background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+  borderBottom: '2px solid #e2e8f0',
 }));
 
 interface SidebarProps {
@@ -87,6 +89,7 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
     };
 
     fetchGroups();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const handleGroupClick = (groupId: string) => {
@@ -143,6 +146,9 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
         '& .MuiDrawer-paper': {
           width: drawerWidth,
           boxSizing: 'border-box',
+          background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
+          borderRight: 'none',
+          boxShadow: '4px 0 24px -8px rgba(99, 102, 241, 0.2)',
         },
       }}
       variant="persistent"
@@ -150,63 +156,106 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
       open={open}
     >
       <DrawerHeader>
-        <Typography variant="subtitle2" sx={{ px: 1 }}>
-          Manage Groups
-        </Typography>
-        <IconButton onClick={onClose}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <GroupIcon sx={{ color: '#6366f1', fontSize: 28 }} />
+          <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b' }}>
+            Groups
+          </Typography>
+        </Box>
+        <IconButton 
+          onClick={onClose}
+          sx={{
+            '&:hover': {
+              backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            },
+          }}
+        >
           {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
         </IconButton>
       </DrawerHeader>
 
-      <Divider />
+      <Divider sx={{ borderColor: '#e2e8f0' }} />
 
-      <List>
-        {userGroups.length > 0 ? (
-          userGroups.map((group) => (
-            <ListItem key={group.id} disablePadding>
-                      <ListItemButton
-          onClick={() => handleGroupClick(group.id)}
-          selected={group.id === activeGroupId}
-          sx={{
-            '&.Mui-selected': {
-              backgroundColor: '#f0f0f0',
-              '&:hover': {
-                backgroundColor: '#e0e0e0',
-              },
-            },
-          }}
-        >
-          <ListItemIcon>
-            <GroupIcon />
-          </ListItemIcon>
-          <ListItemText primary={group.name} />
-        </ListItemButton>
-            </ListItem>
-          ))
-        ) : (
-          <Typography sx={{ px: 2, py: 1 }} variant="body2" color="text.secondary">
-            No groups yet.
-          </Typography>
-        )}
-      </List>
+      <Box sx={{ px: 1, py: 2 }}>
+        <List sx={{ gap: 0.5, display: 'flex', flexDirection: 'column' }}>
+          {userGroups.length > 0 ? (
+            userGroups.map((group) => (
+              <ListItem key={group.id} disablePadding>
+                <ListItemButton
+                  onClick={() => handleGroupClick(group.id)}
+                  selected={group.id === activeGroupId}
+                  sx={{
+                    borderRadius: '10px',
+                    mx: 0.5,
+                    '&.Mui-selected': {
+                      background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)',
+                      borderLeft: '4px solid #6366f1',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #e0e7ff 0%, #ddd6fe 100%)',
+                      },
+                    },
+                    '&:hover': {
+                      backgroundColor: '#f8fafc',
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    <GroupIcon sx={{ color: group.id === activeGroupId ? '#6366f1' : '#64748b' }} />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={group.name}
+                    primaryTypographyProps={{
+                      fontWeight: group.id === activeGroupId ? 600 : 500,
+                      color: group.id === activeGroupId ? '#6366f1' : '#475569',
+                    }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))
+          ) : (
+            <Box sx={{ px: 2, py: 3, textAlign: 'center' }}>
+              <GroupIcon sx={{ fontSize: 48, color: '#cbd5e1', mb: 1 }} />
+              <Typography variant="body2" color="text.secondary">
+                No groups yet. Create one below!
+              </Typography>
+            </Box>
+          )}
+        </List>
+      </Box>
 
-      <Divider />
+      <Divider sx={{ borderColor: '#e2e8f0' }} />
 
-      <List>
-        <ListItem disablePadding>
-          <ListItemButton>
-            <ListItemIcon>
-              <TroubleshootIcon />
-            </ListItemIcon>
-            <ListItemText primary="Song Analysis" />
-          </ListItemButton>
-        </ListItem>
-      </List>
+      <Box sx={{ px: 1, py: 1 }}>
+        <List>
+          <ListItem disablePadding>
+            <ListItemButton
+              sx={{
+                borderRadius: '10px',
+                mx: 0.5,
+                '&:hover': {
+                  backgroundColor: '#f8fafc',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40 }}>
+                <TroubleshootIcon sx={{ color: '#64748b' }} />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Song Analysis"
+                primaryTypographyProps={{
+                  fontWeight: 500,
+                  color: '#475569',
+                }}
+              />
+            </ListItemButton>
+          </ListItem>
+        </List>
+      </Box>
 
-      <Divider />
+      <Divider sx={{ borderColor: '#e2e8f0' }} />
 
-      <Box sx={{ p: 2 }}>
-        <Typography variant="subtitle1" gutterBottom>
+      <Box sx={{ p: 2.5 }}>
+        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: '#1e293b', mb: 2 }}>
           Create Group
         </Typography>
         <TextField
@@ -215,7 +264,8 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
           onChange={(e) => setGroupNameInput(e.target.value)}
           fullWidth
           size="small"
-          sx={{ mb: 1 }}
+          sx={{ mb: 1.5 }}
+          variant="outlined"
         />
         <Tooltip
           title={!user ? "You must be logged in to create a group" : "Enter a group name to enable"}
@@ -227,8 +277,14 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
               fullWidth
               onClick={handleCreateGroup}
               disabled={!user || !groupNameInput.trim()}
+              sx={{
+                background: !user || !groupNameInput.trim() 
+                  ? undefined 
+                  : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                fontWeight: 600,
+              }}
             >
-              Create
+              Create Group
             </Button>
           </span>
         </Tooltip>
@@ -250,8 +306,8 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
             <Button onClick={() => setShowDialog(false)}>Close</Button>
           </DialogActions>
         </Dialog>
-        <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
-          Add User to Group
+        <Typography variant="subtitle1" gutterBottom sx={{ mt: 3, fontWeight: 600, color: '#1e293b', mb: 2 }}>
+          Join Group
         </Typography>
         <TextField
           label="Group ID"
@@ -259,7 +315,8 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
           onChange={(e) => setGroupIdInput(e.target.value)}
           fullWidth
           size="small"
-          sx={{ mb: 1 }}
+          sx={{ mb: 1.5 }}
+          variant="outlined"
         />
         <Tooltip
           title={!user ? "You must be logged in to be added to a group" : "Enter a group id to enable"}
@@ -267,12 +324,19 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
         >
           <span>
             <Button
-              variant="contained"
+              variant="outlined"
               fullWidth
               onClick={handleAddGroupToUser}
               disabled={!user || !groupIdInput.trim()}
+              sx={{
+                borderWidth: 2,
+                fontWeight: 600,
+                '&:hover': {
+                  borderWidth: 2,
+                },
+              }}
             >
-              Add
+              Join Group
             </Button>
           </span>
         </Tooltip>
