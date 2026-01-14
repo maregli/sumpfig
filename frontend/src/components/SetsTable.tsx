@@ -18,7 +18,7 @@ import Paper from '@mui/material/Paper';
 import Tooltip from '@mui/material/Tooltip';
 import { visuallyHidden } from '@mui/utils';
 import { Button, TableFooter, IconButton, Checkbox } from '@mui/material';
-import LinkIcon from '@mui/icons-material/Link';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -112,6 +112,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
   return (
     <TableHead>
       <TableRow>
+        <TableCell padding="checkbox" />
         {editMode ? (
           <TableCell padding="checkbox">
             <Checkbox
@@ -127,7 +128,6 @@ function EnhancedTableHead(props: EnhancedTableProps) {
         ) : (
           <TableCell padding="checkbox">Link</TableCell>
         )}
-        <TableCell padding="checkbox" />
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
@@ -444,6 +444,23 @@ export default function SongsTable() {
               }}
             >
               <TableCell padding="checkbox">
+                {!editMode && (
+                  <IconButton
+                    size="small"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleRowClick(event, track.id);
+                    }}
+                    sx={{
+                      transition: 'transform 0.2s',
+                      transform: expandedRow === track.id ? 'rotate(180deg)' : 'rotate(0deg)',
+                    }}
+                  >
+                    {expandedRow === track.id ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                  </IconButton>
+                )}
+              </TableCell>
+              <TableCell padding="checkbox">
                 {editMode ? (
                   <Checkbox
                     color="primary"
@@ -472,29 +489,13 @@ export default function SongsTable() {
                             color: '#8b5cf6',
                             transform: 'scale(1.1)',
                           },
+                          transition: 'all 0.2s ease',
                         }}
                       >
-                        <LinkIcon />
+                        <OpenInNewIcon />
                       </IconButton>
                     </Tooltip>
                   )
-                )}
-              </TableCell>
-              <TableCell padding="checkbox">
-                {!editMode && (
-                  <IconButton
-                    size="small"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleRowClick(event, track.id);
-                    }}
-                    sx={{
-                      transition: 'transform 0.2s',
-                      transform: expandedRow === track.id ? 'rotate(180deg)' : 'rotate(0deg)',
-                    }}
-                  >
-                    {expandedRow === track.id ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-                  </IconButton>
                 )}
               </TableCell>
               <TableCell 
