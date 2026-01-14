@@ -359,7 +359,17 @@ export default function SongsTable() {
             height: '10px',
           },
         }}>
-        <Box sx={{ px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2, borderBottom: '2px solid #e2e8f0', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
+        <Box sx={{ 
+          px: { xs: 2, sm: 3 }, 
+          py: 2, 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'stretch', sm: 'flex-start' }, 
+          gap: 2, 
+          borderBottom: '2px solid #e2e8f0', 
+          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' 
+        }}>
           <Box sx={{ flex: 1 }}>
             <TrackFilters
               tracks={computedTracks}
@@ -380,11 +390,11 @@ export default function SongsTable() {
             color="primary"
             onClick={handleAddTrackOpen}
             sx={{ 
-              px: 3,
+              px: { xs: 2, sm: 3 },
               py: 1.5,
               fontWeight: 600,
-              fontSize: '1rem',
-              minWidth: '180px',
+              fontSize: { xs: '0.9rem', sm: '1rem' },
+              minWidth: { xs: '100%', sm: '180px' },
               background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
               boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
               '&:hover': {
@@ -398,7 +408,7 @@ export default function SongsTable() {
             + Add New Track
           </Button>
         </Box>
-          <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
+          <Table sx={{ minWidth: { xs: '100%', sm: 750 } }} aria-labelledby="tableTitle">
             <EnhancedTableHead
               order={order}
               orderBy={orderBy}
@@ -495,17 +505,20 @@ export default function SongsTable() {
                   event.stopPropagation();
                   handleRowClick(event, track.id);
                 }}
+                sx={{
+                  fontSize: { xs: '0.875rem', sm: '1rem' },
+                }}
               >
                 {track.title}
               </TableCell>
-            <TableCell>{track.artist}</TableCell>
+            <TableCell sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>{track.artist}</TableCell>
             <TableCell align="right">
               {averageRatings[track.id] != null ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'flex-end' }}>
                   {Array.from({ length: 5 }, (_, i) => (
                     <span key={i} style={{ 
                       color: '#fbbf24', 
-                      fontSize: '16px',
+                      fontSize: '14px',
                       filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))',
                     }}>
                       {i < Math.round(averageRatings[track.id]!) ? '★' : '☆'}
@@ -517,18 +530,24 @@ export default function SongsTable() {
                       ml: 1,
                       fontWeight: 600,
                       color: '#64748b',
+                      display: { xs: 'none', sm: 'block' },
                     }}
                   >
                     {averageRatings[track.id]!.toFixed(1)}
                   </Typography>
                 </Box>
               ) : (
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                   No ratings
                 </Typography>
               )}
             </TableCell>
-            <TableCell>{track.added_by_name}</TableCell>
+            <TableCell sx={{ 
+              fontSize: { xs: '0.875rem', sm: '1rem' },
+              display: { xs: 'none', sm: 'table-cell' }
+            }}>
+              {track.added_by_name}
+            </TableCell>
           </TableRow>
           {!editMode && (
             <TrackDetailRow
@@ -568,16 +587,23 @@ export default function SongsTable() {
               >
                 <Box sx={{ 
                   display: 'grid',
-                  gridTemplateColumns: '1fr auto 1fr',
+                  gridTemplateColumns: { xs: '1fr', sm: '1fr auto 1fr' },
                   alignItems: 'center',
                   width: '100%',
+                  gap: { xs: 2, sm: 0 },
                 }}>
                   {/* Left side - Edit mode controls or empty */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 2 }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: { xs: 1, sm: 2 }, 
+                    ml: { xs: 1, sm: 2 },
+                    flexWrap: 'wrap',
+                  }}>
                     {editMode && (
                       <>
                         <Typography
-                          sx={{ fontWeight: 700, color: '#dc2626' }}
+                          sx={{ fontWeight: 700, color: '#dc2626', fontSize: { xs: '0.875rem', sm: '1rem' } }}
                           variant="subtitle1"
                         >
                           {selected.length} selected
@@ -588,18 +614,22 @@ export default function SongsTable() {
                           disabled={selected.length === 0}
                           color="error"
                           variant="contained"
+                          size="small"
                           sx={{
                             fontWeight: 600,
+                            fontSize: { xs: '0.75rem', sm: '0.875rem' },
                           }}
                         >
-                          Delete Selected
+                          Delete
                         </Button>
                         <Button
                           startIcon={<CloseIcon />}
                           onClick={toggleEditMode}
+                          size="small"
                           sx={{
                             fontWeight: 600,
                             color: '#64748b',
+                            fontSize: { xs: '0.75rem', sm: '0.875rem' },
                           }}
                         >
                           Cancel
@@ -609,7 +639,11 @@ export default function SongsTable() {
                   </Box>
 
                   {/* Center - Pagination */}
-                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: { xs: 'center', sm: 'center' },
+                    gridColumn: { xs: '1', sm: 'auto' },
+                  }}>
                     <TablePagination
                       rowsPerPageOptions={[]}
                       component="div"
@@ -621,14 +655,22 @@ export default function SongsTable() {
                       sx={{
                         border: 'none',
                         '& .MuiTablePagination-toolbar': {
-                          minHeight: '52px',
-                        }
+                          minHeight: { xs: '48px', sm: '52px' },
+                          px: { xs: 1, sm: 2 },
+                        },
+                        '& .MuiTablePagination-displayedRows': {
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        },
                       }}
                     />
                   </Box>
 
                   {/* Right side - Edit button */}
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mr: 2 }}>
+                  <Box sx={{ 
+                    display: { xs: 'none', sm: 'flex' },
+                    justifyContent: 'flex-end', 
+                    mr: 2 
+                  }}>
                     {!editMode && (user?.role === 'admin' || tracks.some(track => track.added_by_id === user?.uid)) && (
                       <Button
                         variant="text"

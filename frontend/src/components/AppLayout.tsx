@@ -23,6 +23,13 @@ const Main = styled('main', {
   marginBottom: `16px`,
   width: open ? `calc(100% - ${drawerWidth}px)` : '100%',
   padding: 0,
+  [theme.breakpoints.down('md')]: {
+    marginLeft: '8px',
+    marginRight: '8px',
+    marginTop: '8px',
+    marginBottom: '8px',
+    width: 'calc(100% - 16px)',
+  },
 }));
 
 const AppLayout: React.FC = () => {

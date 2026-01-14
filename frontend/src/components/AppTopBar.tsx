@@ -30,8 +30,10 @@ const AppBar = styled(MuiAppBar, {
     duration: theme.transitions.duration.leavingScreen,
   }),
   ...(open && {
-    width: `calc(100% - ${drawerWidth}px)`,
-    marginLeft: `${drawerWidth}px`,
+    [theme.breakpoints.up('md')]: {
+      width: `calc(100% - ${drawerWidth}px)`,
+      marginLeft: `${drawerWidth}px`,
+    },
     transition: theme.transitions.create(['margin', 'width'], {
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen,
@@ -62,8 +64,8 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ open, onMenuClick }) => {
           >
             <MenuIcon />
           </IconButton>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <MusicNoteIcon sx={{ fontSize: 32, filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))' }} />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
+            <MusicNoteIcon sx={{ fontSize: { xs: 28, sm: 32 }, filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))' }} />
             <Typography 
               variant="h5" 
               noWrap 
@@ -72,6 +74,7 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ open, onMenuClick }) => {
                 fontWeight: 700,
                 letterSpacing: '-0.02em',
                 textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                fontSize: { xs: '1.2rem', sm: '1.5rem' },
               }}
             >
               Sumpfig
@@ -85,6 +88,7 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ open, onMenuClick }) => {
                 fontWeight: 600,
                 fontSize: '0.7rem',
                 height: '20px',
+                display: { xs: 'none', sm: 'flex' },
               }} 
             />
           </Box>

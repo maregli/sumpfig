@@ -1,6 +1,7 @@
 // components/Sidebar.tsx
 import React, { useEffect, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import {
   Drawer,
   Divider,
@@ -62,6 +63,7 @@ interface Group {
 
 const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { user , activeGroupId , setActiveGroupId } = useAuth();
   const [groupNameInput, setGroupNameInput] = useState('');
   const [groupIdInput, setGroupIdInput] = useState('');
@@ -149,11 +151,16 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
           background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
           borderRight: 'none',
           boxShadow: '4px 0 24px -8px rgba(99, 102, 241, 0.2)',
+          [theme.breakpoints.down('md')]: {
+            width: '80vw',
+            maxWidth: drawerWidth,
+          },
         },
       }}
-      variant="persistent"
+      variant={isMobile ? 'temporary' : 'persistent'}
       anchor={side}
       open={open}
+      onClose={onClose}
     >
       <DrawerHeader>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

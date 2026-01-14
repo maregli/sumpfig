@@ -122,7 +122,7 @@ const ActivityFeed: React.FC = () => {
     <Paper
       elevation={0}
       sx={{
-        borderRadius: '20px',
+        borderRadius: { xs: '12px', sm: '20px' },
         overflow: 'hidden',
         background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
         boxShadow: '0 10px 30px -5px rgba(99, 102, 241, 0.15)',
@@ -132,7 +132,7 @@ const ActivityFeed: React.FC = () => {
     >
       <Box
         sx={{
-          p: 2.5,
+          p: { xs: 1.5, sm: 2.5 },
           background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
           borderBottom: '2px solid #e2e8f0',
           display: 'flex',
@@ -140,13 +140,14 @@ const ActivityFeed: React.FC = () => {
           alignItems: 'center',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
           <Typography
             variant="h6"
             sx={{
               fontWeight: 700,
               color: '#1e293b',
               letterSpacing: '-0.01em',
+              fontSize: { xs: '1rem', sm: '1.25rem' },
             }}
           >
             Recent Activity
