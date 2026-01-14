@@ -10,10 +10,8 @@ from src.app.routes import initialize_routes
 def create_app():
     app = Flask(__name__)
 
-    # Get allowed origins from environment variable, default to localhost for development
-    allowed_origins = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(
-        ","
-    )
+    # Allow both local development and production frontends
+    allowed_origins = ["http://localhost:3000", "https://sumpfig.vercel.app"]
 
     CORS(
         app,
@@ -32,8 +30,6 @@ def create_app():
 
     @app.route("/version")
     def version():
-        import os
-
         return f"Job ID: {os.getenv('JOB_ID', 'unknown')}\nCommit ID: {os.getenv('COMMIT_ID', 'unknown')}"
 
     return app
