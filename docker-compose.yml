@@ -1,27 +1,36 @@
-version: "1.0"
 name: 'sumpfig'
 services:
   backend:
+    container_name: sumpfig-backend
     build: ./backend
     volumes:
       - ./backend/src:/app/src
     ports:
-      - "5000:5000"
+      - "5001:5000"
+    env_file:
+      - ./backend/.env
     # stdin_open: true
     # tty: true
   frontend:
+    container_name: sumpfig-frontend
     build: ./frontend
     volumes:
       - ./frontend/src:/app/src
     ports:
       - "3000:3000"
+    env_file:
+      - ./frontend/.env.local
     environment:
       - WATCHPACK_POLLING=true
-      - REACT_APP_FIREBASE_API_KEY=${REACT_APP_FIREBASE_API_KEY}
-      - REACT_APP_FIREBASE_AUTH_DOMAIN=${REACT_APP_FIREBASE_AUTH_DOMAIN}
-      - REACT_APP_FIREBASE_PROJECT_ID=${REACT_APP_FIREBASE_PROJECT_ID}
-      - REACT_APP_FIREBASE_STORAGE_BUCKET=${REACT_APP_FIREBASE_STORAGE_BUCKET}
-      - REACT_APP_FIREBASE_MESSAGING_SENDER_ID=${REACT_APP_FIREBASE_MESSAGING_SENDER_ID}
-      - REACT_APP_FIREBASE_APP_ID=${REACT_APP_FIREBASE_APP_ID}
-      - REACT_APP_FIREBASE_MEASUREMENT_ID=${REACT_APP_FIREBASE_MEASUREMENT_ID}
+      - REACT_APP_SOUNDCLOUD_API_URL=http://localhost:5002
+  soundcloud-service:
+    container_name: sumpfig-soundcloud
+    build:
+      context: .
+      dockerfile: ./soundcloud-service/Dockerfile
+    ports:
+      - "5002:5002"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5002
 

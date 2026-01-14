@@ -7,7 +7,9 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Box from '@mui/material/Box';
+import { Alert } from '@mui/material';
 import LoginButton from './Login';
+import { useAuth } from './AuthProvider';
 
 interface AppTopBarProps {
   open: boolean;
@@ -34,28 +36,49 @@ const AppBar = styled(MuiAppBar, {
 }));
 
 const AppTopBar: React.FC<AppTopBarProps> = ({ open, onMenuClick }) => {
+  const { user } = useAuth();
+  
   return (
-    <AppBar position="fixed" open={open}>
-      <Toolbar>
-        <IconButton
-          color="inherit"
-          aria-label="open drawer"
-          onClick={onMenuClick}
-          edge="start"
+    <>
+      <AppBar position="fixed" open={open}>
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            onClick={onMenuClick}
+            edge="start"
+            sx={{
+              mr: 2,
+              ...(open && { display: 'none' }),
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" noWrap component="div">
+            Sumpfig
+          </Typography>
+          <Box sx={{ flexGrow: 1 }} />
+          <LoginButton />
+        </Toolbar>
+      </AppBar>
+      
+      {/* Demo Mode Banner */}
+      {!user && (
+        <Box
           sx={{
-            mr: 2,
-            ...(open && { display: 'none' }),
+            position: 'fixed',
+            top: 64, // Below AppBar
+            left: 0,
+            right: 0,
+            zIndex: 1100,
           }}
         >
-          <MenuIcon />
-        </IconButton>
-        <Typography variant="h6" noWrap component="div">
-          Sumpfig
-        </Typography>
-        <Box sx={{ flexGrow: 1 }} />
-        <LoginButton />
-      </Toolbar>
-    </AppBar>
+          <Alert severity="info" sx={{ borderRadius: 0 }}>
+            <strong>Demo Mode:</strong> You're viewing demo content. Login to create your own groups and add tracks!
+          </Alert>
+        </Box>
+      )}
+    </>
   );
 };
 

@@ -11,8 +11,8 @@ Dependencies:
 """
 
 import json
-import re
 import logging
+import re
 
 import requests
 from bs4 import BeautifulSoup
@@ -77,7 +77,11 @@ def extract_track_data(url):
 
         # Step 4: Extract track & user info
         track_data = next(
-            (item["data"] for item in hydration_data if item.get("hydratable") == "sound"),
+            (
+                item["data"]
+                for item in hydration_data
+                if item.get("hydratable") == "sound"
+            ),
             None,
         )
         if not track_data:

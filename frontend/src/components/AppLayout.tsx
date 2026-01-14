@@ -4,6 +4,7 @@ import { Box, CssBaseline, Toolbar } from '@mui/material';
 import Sidebar from './Sidebar';
 import AppTopBar from './AppTopBar';
 import SongsTable from './SetsTable';
+import { useAuth } from './AuthProvider';
 
 const drawerWidth = 240;
 
@@ -25,6 +26,7 @@ const Main = styled('main', {
 
 const AppLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -34,6 +36,8 @@ const AppLayout: React.FC = () => {
       
       <Main open={sidebarOpen}>
         <Toolbar /> {/* spacer for AppBar */}
+        {/* Additional spacer for demo banner when not logged in */}
+        {!user && <Box sx={{ height: 48 }} />}
         <SongsTable />
       </Main>
     </Box>
