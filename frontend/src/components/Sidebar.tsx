@@ -18,7 +18,6 @@ import {
   Tooltip,
 
 } from '@mui/material';
-import TroubleshootIcon from '@mui/icons-material/Troubleshoot';
 import GroupIcon from '@mui/icons-material/Group';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -230,36 +229,6 @@ const Sidebar: React.FC<SidebarProps> = ({ side, open, onClose }) => {
         </List>
       </Box>
 
-      <Divider sx={{ borderColor: '#e2e8f0' }} />
-
-      <Box sx={{ px: 1, py: 1 }}>
-        <List>
-          <ListItem disablePadding>
-            <ListItemButton
-              sx={{
-                borderRadius: '10px',
-                mx: 0.5,
-                '&:hover': {
-                  backgroundColor: '#f8fafc',
-                },
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 40 }}>
-                <TroubleshootIcon sx={{ color: '#64748b' }} />
-              </ListItemIcon>
-              <ListItemText 
-                primary="Song Analysis"
-                primaryTypographyProps={{
-                  fontWeight: 500,
-                  color: '#475569',
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
-        </List>
-      </Box>
-
-      <Divider sx={{ borderColor: '#e2e8f0' }} />
 
       <Box sx={{ p: 2.5 }}>
         <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: '#1e293b', mb: 2 }}>
